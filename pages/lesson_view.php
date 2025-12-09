@@ -159,6 +159,12 @@ $quizSubmitted   = ($_SERVER['REQUEST_METHOD'] === 'POST');
 $quizResult      = null;
 $selectedAnswers = array();
 
+// PERBAIKAN: Muat jawaban dari session jika ada
+// (Saat user kembali dari materi, jawaban tidak hilang)
+if (isset($_SESSION['quiz_answers'][$lesson['id']])) {
+    $selectedAnswers = $_SESSION['quiz_answers'][$lesson['id']];
+}
+
 if ($quizSubmitted && !empty($questions)) {
     $totalQuestions = count($questions);
     $correctCount   = 0;
@@ -366,7 +372,7 @@ if (!isset($hasPassedLesson)) {
                 </h1>
 
                 <!-- Konten materi -->
-                <div class="card border-0 shadow-sm mb-3">
+                <div class="card border-0 shadow-sm mb-3" id="lesson-content">
                     <div class="card-body">
                         <?php if ($lesson['content_type'] === 'video' || $lesson['content_type'] === 'mixed'): ?>
                             <?php if (!empty($lesson['video_url'])): ?>
@@ -475,11 +481,19 @@ if (!isset($hasPassedLesson)) {
 
         <!-- Soal setelah materi -->
         <div class="mt-4">
-            <h2 class="h6 mb-2">Soal Materi Ini</h2>
-            <p class="small text-muted">
-                Jawablah soal berdasarkan materi yang baru saja Anda pelajari.
-                Untuk dinyatakan lulus, semua jawaban harus benar.
-            </p>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h2 class="h6 mb-2">Soal Materi Ini</h2>
+                    <p class="small text-muted mb-0">
+                        Jawablah soal berdasarkan materi yang baru saja Anda pelajari.
+                        Untuk dinyatakan lulus, semua jawaban harus benar.
+                    </p>
+                </div>
+                <!-- PERBAIKAN: Tombol Kembali ke Materi -->
+                <a href="#lesson-content" class="btn btn-outline-secondary btn-sm">
+                    ← Kembali ke Materi
+                </a>
+            </div>
 
             <?php if (empty($questions)): ?>
                 <div class="alert alert-warning small">
@@ -614,6 +628,13 @@ if (!isset($hasPassedLesson)) {
                     </button>
                 </form>
 
+                <!-- PERBAIKAN: Tombol kembali ke materi di bawah form -->
+                <div class="mt-2 mb-3">
+                    <a href="#lesson-content" class="btn btn-outline-secondary btn-sm">
+                        ← Kembali ke Materi
+                    </a>
+                </div>
+
                 <?php if (!empty($nextLesson)): ?>
                     <div class="mt-3">
                         <?php if ($hasPassedLesson): ?>
@@ -660,7 +681,11 @@ if (!isset($hasPassedLesson)) {
         var hint = document.getElementById('lesson-hint');
         var btnSubmit = document.getElementById('btn-submit-quiz');
 
-        if (!list || !btnNext) return;
+        // PERBAIKAN: Jika tidak ada list poin materi (lesson tanpa poin), langsung aktifkan form soal
+        if (!list || !btnNext) {
+            if (btnSubmit) btnSubmit.disabled = false;
+            return;
+        }
 
         var points = Array.prototype.slice.call(list.querySelectorAll('.lesson-point'));
         if (!points.length) {
@@ -714,6 +739,50 @@ if (!isset($hasPassedLesson)) {
                 updateHint('Semua poin materi sudah ditampilkan. Soal bisa diaktifkan (tahap berikutnya).');
                 if (btnSubmit) btnSubmit.disabled = false;
             }
+        });
+    })();
+
+    // ============================================================
+    // PERBAIKAN: Simpan jawaban ke session saat user mengubah pilihan
+    // Tujuan: Agar pilihan tetap ada saat user kembali dari materi
+    // ============================================================
+    (function() {
+        var lessonId = <?= (int)$lesson['id'] ?>;
+        var form = document.querySelector('form');
+        if (!form) return;
+
+        // Tangkap semua radio button (pilihan soal)
+        var radioButtons = form.querySelectorAll('input[type="radio"]');
+        
+        radioButtons.forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                // Ekstrak question ID dari name attribute
+                // Format: q_<question_id>
+                var fieldName = this.name; // q_123
+                var questionId = fieldName.replace('q_', '');
+                var answer = this.value; // A, B, C, dll
+                
+                // Kirim ke server via AJAX untuk disimpan di session
+                var formData = new FormData();
+                formData.append('lesson_id', lessonId);
+                formData.append('question_id', questionId);
+                formData.append('answer', answer);
+                
+                fetch('save_quiz_answers.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+                    // Silent - jawaban sudah tersimpan
+                    console.log('Jawaban tersimpan:', data);
+                })
+                .catch(function(error) {
+                    console.error('Error menyimpan jawaban:', error);
+                });
+            });
         });
     })();
 </script>
