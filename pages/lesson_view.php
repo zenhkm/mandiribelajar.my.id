@@ -173,6 +173,15 @@ if (!isset($hasPassedLesson)) {
 }
 // ============================================================
 
+// Ambil apakah user sudah membaca materi ini
+$hasRead = false;
+$stmtRead = $pdo->prepare("SELECT has_read FROM lesson_progress WHERE user_id = ? AND lesson_id = ? LIMIT 1");
+$stmtRead->execute([$userId, $lesson['id']]);
+$rowRead = $stmtRead->fetch();
+if ($rowRead && (int)$rowRead['has_read'] === 1) {
+    $hasRead = true;
+}
+
 // Cari next lesson untuk navigasi
 $nextLesson = null;
 $sqlNext = "
@@ -359,10 +368,12 @@ $nextLesson = $stmtNext->fetch();
                                 Lihat Hasil Kuis
                             </a>
                         <?php else: ?>
-                            <a href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>&lesson=<?= (int)$lesson['id'] ?>&quiz=1"
-                               class="btn btn-primary btn-sm">
+                            <!-- Disabled button initially, enabled after reading via AJAX -->
+                                <button id="btn-go-quiz" class="btn btn-primary btn-sm" <?php if (!$hasPassedLesson && !$hasRead) echo 'disabled'; ?>
+                                    title="<?php echo (!$hasPassedLesson && !$hasRead) ? 'Baca materi sampai selesai untuk membuka soal' : ''; ?>"
+                                    data-quiz-url="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>&lesson=<?= (int)$lesson['id'] ?>&quiz=1">
                                 Kerjakan Soal →
-                            </a>
+                            </button>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -399,9 +410,14 @@ $nextLesson = $stmtNext->fetch();
         var list = document.getElementById('lesson-points');
         var btnNext = document.getElementById('btn-next-point');
         var hint = document.getElementById('lesson-hint');
+        var btnGoQuiz = document.getElementById('btn-go-quiz');
 
         // Jika tidak ada list poin materi, tidak perlu lakukan apa-apa
         if (!list || !btnNext) {
+            // No points to read -> immediately mark as read and enable quiz button (if present)
+            if (btnGoQuiz) {
+                markLessonRead();
+            }
             return;
         }
 
@@ -449,6 +465,10 @@ $nextLesson = $stmtNext->fetch();
 
                 // Semua poin sudah tampil
                 updateHint('Semua poin materi sudah ditampilkan. Silakan klik "Kerjakan Soal" untuk melanjutkan.');
+                // Mark lesson read and enable button
+                if (btnGoQuiz) {
+                    markLessonRead();
+                }
             } else {
                 // Sudah di poin terakhir sejak awal
                 btnNext.disabled = true;
@@ -456,4 +476,52 @@ $nextLesson = $stmtNext->fetch();
             }
         });
     })();
+
+    // MARK LESSON AS READ FUNCTION
+    function markLessonRead() {
+        // Prevent multiple calls
+        if (typeof window._lessonReadMarked !== 'undefined' && window._lessonReadMarked) return;
+        window._lessonReadMarked = true;
+
+        var lessonId = <?= (int)$lesson['id'] ?>;
+        var formData = new FormData();
+        formData.append('lesson_id', lessonId);
+
+        fetch('mark_lesson_read.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(d) {
+            if (d && d.status === 'success') {
+                if (btnGoQuiz) {
+                    btnGoQuiz.disabled = false;
+                    // convert to clickable behavior
+                    btnGoQuiz.addEventListener('click', function() {
+                        var url = this.getAttribute('data-quiz-url');
+                        if (url) window.location.href = url;
+                    });
+                }
+            } else {
+                console.warn('mark_lesson_read failed', d);
+            }
+        })
+        .catch(function(err){
+            console.error('mark_lesson_read error', err);
+        });
+    }
+
+    // Jika halaman sudah menandai read pada server (hasRead), enable tombol dan pasang click
+    <?php if ($hasRead || $hasPassedLesson): ?>
+    (function() {
+        var btn = document.getElementById('btn-go-quiz');
+        if (btn) {
+            btn.disabled = false;
+            btn.addEventListener('click', function() {
+                var url = this.getAttribute('data-quiz-url');
+                if (url) window.location.href = url;
+            });
+        }
+    })();
+    <?php endif; ?>
 </script>

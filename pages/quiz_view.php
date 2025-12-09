@@ -96,12 +96,30 @@ if ($prevLesson) {
     }
 }
 
+// Cek apakah user telah membaca materi ini (has_read) atau sudah lulus
+$stmtThisProg = $pdo->prepare("SELECT has_read, has_passed FROM lesson_progress WHERE user_id = ? AND lesson_id = ? LIMIT 1");
+$stmtThisProg->execute([$userId, $lesson['id']]);
+$rowThisProg = $stmtThisProg->fetch();
+
+// If there are questions, require read (or passed) to access quiz
+$hasQuiz = !empty($questions);
+if ($hasQuiz) {
+    $thisHasRead = ($rowThisProg && (int)$rowThisProg['has_read'] === 1);
+    $thisHasPassed = ($rowThisProg && (int)$rowThisProg['has_passed'] === 1);
+    if (!$thisHasRead && !$thisHasPassed) {
+        $canAccessQuiz = false;
+    }
+}
+
 // Jika tidak boleh akses, tampilkan pesan
 if (!$canAccessQuiz) {
 ?>
     <div class="container my-5">
         <div class="alert alert-warning">
-            Untuk mengakses soal ini, Anda harus <strong>lulus</strong> materi sebelumnya terlebih dahulu.
+            Untuk membuka halaman kuis, Anda harus <strong>menyelesaikan materi</strong> terlebih dahulu.
+            Silakan kembali ke materi dan baca sampai selesai, lalu pilih tombol <em>Kerjakan Soal</em>.
+            <br>
+            <a href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>&lesson=<?= (int)$lesson['id'] ?>" class="btn btn-sm btn-outline-secondary mt-2">← Kembali ke Materi</a>
         </div>
     </div>
 <?php
