@@ -83,19 +83,32 @@ if ($progressRows) {
 
 
 
-// Cari lesson pertama untuk tombol "Mulai dari Bab 1"
-$firstLessonId = null;
-$stmtFirst = $pdo->prepare("
-    SELECT id
-    FROM lessons
-    WHERE course_id = ?
-    ORDER BY lesson_order ASC, id ASC
-    LIMIT 1
-");
-$stmtFirst->execute([$course['id']]);
-$rowFirst = $stmtFirst->fetch();
-if ($rowFirst) {
-    $firstLessonId = (int)$rowFirst['id'];
+// Tentukan materi mana yang harus dikerjakan (Resume)
+$resumeLesson = null;
+$isCourseComplete = false;
+$hasStarted = false;
+
+if ($lessonsAll) {
+    foreach ($lessonsAll as $ls) {
+        $lid = (int)$ls['id'];
+        // Cek apakah user sudah lulus materi ini
+        $passed = isset($progressByLesson[$lid]) && $progressByLesson[$lid] == 1;
+        
+        if ($passed) {
+            $hasStarted = true;
+        } else {
+            // Ketemu materi pertama yang BELUM lulus -> ini targetnya
+            $resumeLesson = $ls;
+            break;
+        }
+    }
+    
+    // Jika loop selesai dan $resumeLesson masih null, berarti semua sudah lulus
+    if (!$resumeLesson && count($lessonsAll) > 0) {
+        $isCourseComplete = true;
+        // Arahkan ke materi terakhir
+        $resumeLesson = end($lessonsAll); 
+    }
 }
 ?>
 
@@ -150,28 +163,42 @@ if ($rowFirst) {
             <div class="col-12 col-lg-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
-                        <div class="section-label mb-2">Mulai Kursus</div>
+                        <div class="section-label mb-2">
+                            <?php if ($isCourseComplete): ?>
+                                Kursus Selesai
+                            <?php elseif ($hasStarted): ?>
+                                Lanjut Belajar
+                            <?php else: ?>
+                                Mulai Kursus
+                            <?php endif; ?>
+                        </div>
+                        
                         <p class="small text-muted">
-                            Mulailah dari materi pertama. Anda akan membaca materi, kemudian
-                            mengerjakan soal untuk bisa lanjut ke materi berikutnya.
+                            <?php if ($isCourseComplete): ?>
+                                Selamat! Anda telah menyelesaikan semua materi di kursus ini.
+                            <?php elseif ($hasStarted): ?>
+                                Lanjutkan progres belajar Anda di materi terakhir yang belum selesai.
+                            <?php else: ?>
+                                Mulailah dari materi pertama. Baca materi, kerjakan soal, lalu lanjut ke materi berikutnya.
+                            <?php endif; ?>
                         </p>
 
-                        <?php if ($firstLessonId): ?>
-                            <a class="btn btn-primary w-100 mb-2"
-                               href="index.php?kursus=<?= urlencode($course['slug']) ?>&lesson=<?= $firstLessonId ?>">
-                                Mulai dari Bab 1 – Materi 1
+                        <?php if ($resumeLesson): ?>
+                            <a class="btn <?= $isCourseComplete ? 'btn-success' : 'btn-primary' ?> w-100 mb-2"
+                               href="index.php?kursus=<?= urlencode($course['slug']) ?>&lesson=<?= (int)$resumeLesson['id'] ?>">
+                                <?php if ($isCourseComplete): ?>
+                                    Lihat Materi Terakhir
+                                <?php elseif ($hasStarted): ?>
+                                    Lanjut: <?= htmlspecialchars($resumeLesson['title']) ?>
+                                <?php else: ?>
+                                    Mulai dari Bab 1
+                                <?php endif; ?>
                             </a>
                         <?php else: ?>
                             <button class="btn btn-secondary w-100 mb-2" type="button" disabled>
                                 Belum ada materi
                             </button>
                         <?php endif; ?>
-
-                        <small class="text-muted d-block">
-                            Setelah struktur materi dan soal lengkap, tombol ini akan 
-                            mengarahkan ke alur:
-                            <em>Materi → Soal → Lanjut ke materi berikutnya</em>.
-                        </small>
                     </div>
                 </div>
             </div>
