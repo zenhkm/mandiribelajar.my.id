@@ -134,9 +134,9 @@ $hasQuiz = isset($rowQ['count']) && (int)$rowQ['count'] > 0;
 if (!isset($hasPassedLesson)) {
     $hasPassedLesson = false;
 
-    // LOGIC FIX: Jika tidak ada soal, user otomatis dianggap lulus
+    // LOGIC FIX: Jika tidak ada soal (hasQuiz==false), user otomatis dianggap lulus
     // (Supaya bisa lanjut ke materi berikutnya)
-    if (empty($questions)) {
+    if (!$hasQuiz) {
         $hasPassedLesson = true;
         
         // Simpan ke database bahwa user sudah "lulus" lesson ini
