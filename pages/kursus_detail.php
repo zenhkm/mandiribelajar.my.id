@@ -183,12 +183,15 @@ if ($lessonsAll) {
                             <?php endif; ?>
                         </p>
 
-                        <?php if ($resumeLesson): ?>
-                            <a class="btn <?= $isCourseComplete ? 'btn-success' : 'btn-primary' ?> w-100 mb-2"
+                        <?php if ($isCourseComplete): ?>
+                            <a class="btn btn-success w-100 mb-2" target="_blank"
+                               href="certificate.php?course_id=<?= (int)$course['id'] ?>">
+                                <i class="bi bi-award"></i> Download Sertifikat
+                            </a>
+                        <?php elseif ($resumeLesson): ?>
+                            <a class="btn btn-primary w-100 mb-2"
                                href="index.php?kursus=<?= urlencode($course['slug']) ?>&lesson=<?= (int)$resumeLesson['id'] ?>">
-                                <?php if ($isCourseComplete): ?>
-                                    Lihat Materi Terakhir
-                                <?php elseif ($hasStarted): ?>
+                                <?php if ($hasStarted): ?>
                                     Lanjut: <?= htmlspecialchars($resumeLesson['title']) ?>
                                 <?php else: ?>
                                     Mulai dari Bab 1
