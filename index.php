@@ -10,6 +10,7 @@ check_login();
 $page              = isset($_GET['page']) ? $_GET['page'] : '';
 $currentCourseSlug = isset($_GET['kursus']) ? trim($_GET['kursus']) : null;
 $lessonId          = isset($_GET['lesson']) ? (int)$_GET['lesson'] : null;
+$isQuiz            = isset($_GET['quiz']) ? (int)$_GET['quiz'] : 0;
 
 // -- ROUTE KE HALAMAN ADMIN --
 if ($page === 'admin') {
@@ -89,6 +90,12 @@ if ($page === 'admin') {
 // ...
 
 // -- ROUTE HALAMAN UTAMA (USER) --
+} elseif ($currentCourseSlug && $lessonId && $isQuiz) {
+    $pageTitle = 'Kuis Materi';
+    include __DIR__ . '/layout/header.php';
+    include __DIR__ . '/pages/quiz_view.php';
+    include __DIR__ . '/layout/footer.php';
+
 } elseif ($currentCourseSlug && $lessonId) {
     $pageTitle = 'Materi Kursus';
     include __DIR__ . '/layout/header.php';

@@ -111,192 +111,21 @@ if (!$canAccessLesson) {
 }
 
 // Ambil soal & opsi untuk lesson ini
+// CATATAN: Kode soal sudah dipindahkan ke quiz_view.php
+// Kita hanya perlu cek apakah ada soal atau tidak
 $sqlQ = "
-    SELECT q.*
+    SELECT COUNT(*) as count
     FROM lesson_questions q
     WHERE q.lesson_id = ?
-    ORDER BY RAND()   
+    LIMIT 1
 ";
 $stmtQ = $pdo->prepare($sqlQ);
 $stmtQ->execute(array($lesson['id']));
-$questions = $stmtQ->fetchAll();
+$rowQ = $stmtQ->fetch();
+$hasQuiz = isset($rowQ['count']) && (int)$rowQ['count'] > 0;
 
-// Ambil semua options per question
-$optionsByQuestion = array();
-if (!empty($questions)) {
-    $questionIds = array();
-    foreach ($questions as $q) {
-        $questionIds[] = (int)$q['id'];
-    }
-
-    if (count($questionIds) > 0) {
-        $placeholders = implode(',', array_fill(0, count($questionIds), '?'));
-        $sqlOpt = "
-            SELECT * FROM lesson_options
-            WHERE question_id IN ($placeholders)
-            ORDER BY question_id ASC, option_label ASC
-        ";
-        $stmtOpt = $pdo->prepare($sqlOpt);
-        $stmtOpt->execute($questionIds);
-        $options = $stmtOpt->fetchAll();
-
-        foreach ($options as $opt) {
-            $qid = (int)$opt['question_id'];
-            if (!isset($optionsByQuestion[$qid])) {
-                $optionsByQuestion[$qid] = array();
-            }
-            $optionsByQuestion[$qid][] = $opt;
-        }
-    }
-}
-
-// ------------------------------
-// LOGIKA PENILAIAN SOAL
-// ------------------------------
-// Hapus baris lama (-), pakai baris baru (+) tapi hilangkan tanda plusnya
-$userId = $_SESSION['user']['id'] ?? 0;
-$quizSubmitted   = ($_SERVER['REQUEST_METHOD'] === 'POST');
-$quizResult      = null;
-$selectedAnswers = array();
-
-// PERBAIKAN: Muat jawaban dari session jika ada
-// (Saat user kembali dari materi, jawaban tidak hilang)
-if (isset($_SESSION['quiz_answers'][$lesson['id']])) {
-    $selectedAnswers = $_SESSION['quiz_answers'][$lesson['id']];
-}
-
-if ($quizSubmitted && !empty($questions)) {
-    $totalQuestions = count($questions);
-    $correctCount   = 0;
-    $details        = array();
-
-    foreach ($questions as $q) {
-        $qid       = (int)$q['id'];
-        $fieldName = 'q_' . $qid;
-        $selected  = isset($_POST[$fieldName]) ? $_POST[$fieldName] : null;
-        $selectedAnswers[$qid] = $selected;
-
-        // Cari opsi yg benar
-        if (isset($optionsByQuestion[$qid])) {
-            $opts = $optionsByQuestion[$qid];
-        } else {
-            $opts = array();
-        }
-
-        $correctOption = null;
-        foreach ($opts as $opt) {
-            if (!empty($opt['is_correct'])) {
-                $correctOption = $opt;
-                break;
-            }
-        }
-
-        $isCorrect = false;
-        if ($selected !== null && $correctOption) {
-            $isCorrect = ($selected === $correctOption['option_label']);
-        }
-
-        if ($isCorrect) {
-            $correctCount++;
-        }
-
-        $details[$qid] = array(
-            'selected'       => $selected,
-            'is_correct'     => $isCorrect,
-            'correct_option' => $correctOption,
-            'question'       => $q,
-        );
-    }
-
-    $allCorrect = ($correctCount === $totalQuestions);
-
-    $quizResult = array(
-        'total'       => $totalQuestions,
-        'correct'     => $correctCount,
-        'all_correct' => $allCorrect,
-        'details'     => $details,
-    );
-
-    // Simpan progres ke database
-    // Simpan progres ke database
-    try {
-        $hasRead   = 1;
-        $hasPassed = $allCorrect ? 1 : 0;
-        $lastScore = $correctCount;
-
-        $stmtProg = $pdo->prepare("
-            INSERT INTO lesson_progress (user_id, lesson_id, has_read, has_passed, attempts, last_score)
-            VALUES (:user_id, :lesson_id, :has_read, :has_passed, 1, :last_score)
-            ON DUPLICATE KEY UPDATE
-                has_read   = VALUES(has_read),
-                has_passed = VALUES(has_passed),
-                attempts   = attempts + 1,
-                last_score = VALUES(last_score),
-                updated_at = CURRENT_TIMESTAMP
-        ");
-        $stmtProg->execute(array(
-            ':user_id'    => $userId,
-            ':lesson_id'  => $lesson['id'],
-            ':has_read'   => $hasRead,
-            ':has_passed' => $hasPassed,
-            ':last_score' => $lastScore,
-        ));
-    } catch (Exception $e) {
-        // Biarkan kosong atau log error jika perlu
-    } // <--- TUTUP CATCH DI SINI
-
-    // ----------------------------------------------------
-    // PINDAHKAN KODE INI KELUAR DARI CATCH (Supaya selalu dijalankan)
-    // ----------------------------------------------------
-    $hasPassedLesson = false;
-
-    // Kalau barusan submit dan semua benar → sudah pasti lulus
-    if (!empty($quizResult) && !empty($quizResult['all_correct']) && $quizResult['all_correct']) {
-        $hasPassedLesson = true;
-    } else {
-        // Cek di tabel lesson_progress
-        $stmtThisProg = $pdo->prepare("
-            SELECT has_passed
-            FROM lesson_progress
-            WHERE user_id = ? AND lesson_id = ?
-            LIMIT 1
-        ");
-        $stmtThisProg->execute(array($userId, $lesson['id']));
-        $rowThisProg = $stmtThisProg->fetch();
-        if ($rowThisProg && (int)$rowThisProg['has_passed'] === 1) {
-            $hasPassedLesson = true;
-        }
-    }
-
-    // Cari lesson berikutnya di kursus ini
-    $nextLesson = null;
-    // PERBAIKAN: Urutkan berdasarkan Module/Bab dulu, baru Lesson/Materi
-    $sqlNext = "
-            SELECT l.id, l.title
-            FROM lessons l
-            JOIN course_modules m ON l.module_id = m.id
-            WHERE l.course_id = ?
-              AND (
-                (m.module_order = ? AND l.lesson_order > ?) -- Materi selanjutnya di Bab yang sama
-                OR 
-                (m.module_order > ?) -- Materi pertama di Bab selanjutnya
-              )
-            ORDER BY m.module_order ASC, l.lesson_order ASC
-            LIMIT 1
-        ";
-    $stmtNext = $pdo->prepare($sqlNext);
-    $stmtNext->execute(array(
-        $lesson['course_id'],       // Parameter 1: ID Kursus
-        $lesson['module_order'],    // Parameter 2: Bab saat ini
-        $lesson['lesson_order'],    // Parameter 3: Materi saat ini
-        $lesson['module_order']     // Parameter 4: Bab saat ini (untuk cari bab > ini)
-    ));
-    $nextLesson = $stmtNext->fetch();
-
-    // Untuk saat ini, kalau gagal simpan progress, tidak perlu mematikan halaman
-    // echo "DEBUG PROGRESS ERROR: " . htmlspecialchars($e->getMessage());
-
-}
+// CATATAN: Logika penilaian soal sudah dipindahkan ke quiz_view.php
+// Di halaman materi, kita hanya menampilkan status dan tombol untuk membuka soal
 
 // ============================================================
 // FIX: Pastikan $hasPassedLesson selalu terdefinisi
@@ -343,6 +172,30 @@ if (!isset($hasPassedLesson)) {
     }
 }
 // ============================================================
+
+// Cari next lesson untuk navigasi
+$nextLesson = null;
+$sqlNext = "
+    SELECT l.id, l.title
+    FROM lessons l
+    JOIN course_modules m ON l.module_id = m.id
+    WHERE l.course_id = ?
+      AND (
+          (m.module_order = ? AND l.lesson_order > ?)
+          OR
+          (m.module_order > ?)
+      )
+    ORDER BY m.module_order ASC, l.lesson_order ASC
+    LIMIT 1
+";
+$stmtNext = $pdo->prepare($sqlNext);
+$stmtNext->execute(array(
+    $lesson['course_id'],
+    $lesson['module_order'],
+    $lesson['lesson_order'],
+    $lesson['module_order']
+));
+$nextLesson = $stmtNext->fetch();
 ?>
 
 <section class="hero-section">
@@ -479,217 +332,81 @@ if (!isset($hasPassedLesson)) {
             </div>
         </div>
 
-        <!-- Soal setelah materi -->
+        <!-- Bagian Soal (di halaman terpisah) -->
         <div class="mt-4">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <div>
-                    <h2 class="h6 mb-2">Soal Materi Ini</h2>
-                    <p class="small text-muted mb-0">
-                        Jawablah soal berdasarkan materi yang baru saja Anda pelajari.
-                        Untuk dinyatakan lulus, semua jawaban harus benar.
+            <h2 class="h6 mb-3">Soal Materi Ini</h2>
+            
+            <?php if (!$hasQuiz): ?>
+                <div class="alert alert-info small">
+                    <p class="mb-0">
+                        Materi ini tidak memiliki soal. Anda dianggap sudah menyelesaikan materi ini.
                     </p>
                 </div>
-                <!-- PERBAIKAN: Tombol Kembali ke Materi -->
-                <a href="#lesson-content" class="btn btn-outline-secondary btn-sm">
-                    ← Kembali ke Materi
-                </a>
-            </div>
-
-            <?php if (empty($questions)): ?>
-                <div class="alert alert-warning small">
-                    Belum ada soal untuk materi ini.
-                </div>
             <?php else: ?>
-
-                <?php if ($quizSubmitted && $quizResult): ?>
-                    <?php if ($quizResult['all_correct']): ?>
-                        <div class="alert alert-success small">
-                            <p class="mb-2">
-                                Alhamdulillah, semua jawaban Anda <strong>benar</strong>
-                                (<?= $quizResult['correct'] ?>/<?= $quizResult['total'] ?>).
-                                Materi ini dinyatakan <strong>LULUS</strong>.
-                            </p>
-
-                            <?php if (!empty($nextLesson)): ?>
-                                <a href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>&lesson=<?= (int)$nextLesson['id'] ?>"
-                                    class="btn btn-success btn-sm fw-bold mt-2">
-                                    Lanjut ke materi berikutnya: <?= htmlspecialchars($nextLesson['title']) ?> →
-                                </a>
-                            <?php else: ?>
-                                <div class="alert alert-success small mt-2 mb-0">
-                                    <p class="mb-2">🎉 <strong>Selamat!</strong> Anda telah menyelesaikan semua materi di kursus ini.</p>
-                                    <a href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>" class="btn btn-sm btn-outline-primary">
-                                        ← Kembali ke detail kursus
-                                    </a>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php else: ?>
-                        <div class="alert alert-danger small">
-                            Jawaban Anda belum semuanya benar
-                            (<?= $quizResult['correct'] ?>/<?= $quizResult['total'] ?>).
-                            Silakan perhatikan pembahasan, lalu <strong>coba lagi</strong>.
-                        </div>
-                    <?php endif; ?>
-                <?php endif; ?>
-
-                <form method="post" action="">
-                    <?php foreach ($questions as $idx => $q): ?>
-                        <?php
-                        $qid = (int)$q['id'];
-
-                        // Ambil detail jawaban kalau sudah disubmit
-                        $detail = null;
-                        if (!empty($quizResult) && isset($quizResult['details'][$qid])) {
-                            $detail = $quizResult['details'][$qid];
-                        }
-
-                        if (isset($optionsByQuestion[$qid])) {
-                            $opts = $optionsByQuestion[$qid];
-                        } else {
-                            $opts = array();
-                        }
-                        ?>
-                        <div class="card border-0 shadow-sm mb-3">
-                            <div class="card-body">
-                                <div class="fw-semibold mb-2">
-                                    Soal <?= $idx + 1 ?>:
-                                    <?= nl2br(htmlspecialchars($q['question_text'])) ?>
-                                </div>
-
-                                <?php
-                                // --- LOGIKA PENGACAKAN JAWABAN ---
-                                // Kita acak array $opts agar posisinya berubah
-                                if (!$quizSubmitted && !empty($opts)) {
-                                    shuffle($opts);
-                                }
-                                // Array bantu untuk label visual agar tetap A, B, C, D (bukan acak C, A, D, B)
-                                $abcLabels = ['A', 'B', 'C', 'D', 'E'];
-                                ?>
-
-                                <?php foreach ($opts as $key => $opt): ?>
-                                    <?php
-                                    $visualLabel = isset($abcLabels[$key]) ? $abcLabels[$key] : '?';
-
-                                    $fieldName = 'q_' . $qid;
-                                    // ID input kita buat unik pakai label asli database biar tidak bentrok
-                                    $idInput   = $fieldName . '_' . $opt['option_label'];
-
-                                    // Cek jawaban user (tetap bandingkan dengan label asli dari DB)
-                                    $wasSelected = isset($selectedAnswers[$qid]) &&
-                                        $selectedAnswers[$qid] === $opt['option_label'];
-
-                                    $checkedAttr = $wasSelected ? 'checked' : '';
-                                    ?>
-                                    <div class="form-check small mb-1">
-                                        <input class="form-check-input"
-                                            type="radio"
-                                            name="<?= htmlspecialchars($fieldName) ?>"
-                                            id="<?= htmlspecialchars($idInput) ?>"
-                                            value="<?= htmlspecialchars($opt['option_label']) ?>"
-                                            <?= $checkedAttr ?>>
-                                        <label class="form-check-label" for="<?= htmlspecialchars($idInput) ?>">
-                                            <strong><?= $visualLabel ?>.</strong>
-                                            <?= nl2br(htmlspecialchars($opt['option_text'])) ?>
-                                        </label>
-                                    </div>
-                                <?php endforeach; ?>
-
-                                <?php if ($quizSubmitted && $detail): ?>
-                                    <div class="mt-2 small">
-                                        <?php if (!empty($detail['is_correct'])): ?>
-                                            <span class="text-success">✔ Jawaban Anda benar.</span>
-                                        <?php else: ?>
-                                            <span class="text-danger">✘ Jawaban Anda belum tepat.</span><br>
-                                            <?php if (!empty($detail['correct_option'])): ?>
-                                                <span class="text-muted">
-                                                    Jawaban yang benar:
-                                                    <strong>
-                                                        <?= htmlspecialchars($detail['correct_option']['option_label']) ?>.
-                                                        <?= nl2br(htmlspecialchars($detail['correct_option']['option_text'])) ?>
-                                                    </strong>
-                                                </span>
-                                            <?php endif; ?>
-
-                                            <?php if (!empty($q['explanation'])): ?>
-                                                <div class="text-muted mt-1">
-                                                    <?= nl2br(htmlspecialchars($q['explanation'])) ?>
-                                                </div>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-
-                    <button class="btn btn-primary" type="submit" id="btn-submit-quiz" disabled>
-                        Kirim Jawaban
-                    </button>
-                </form>
-
-                <!-- PERBAIKAN: Tombol kembali ke materi di bawah form -->
-                <div class="mt-2 mb-3">
-                    <a href="#lesson-content" class="btn btn-outline-secondary btn-sm">
-                        ← Kembali ke Materi
-                    </a>
-                </div>
-
-                <?php if (!empty($nextLesson)): ?>
-                    <div class="mt-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <p class="small text-muted mb-3">
+                            Setelah membaca materi di atas, silakan kerjakan soal untuk menguji pemahaman Anda.
+                            Untuk dinyatakan lulus, semua jawaban harus benar (100%).
+                        </p>
+                        
                         <?php if ($hasPassedLesson): ?>
-                            <a class="btn btn-success btn-sm w-100"
-                                href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>&lesson=<?= (int)$nextLesson['id'] ?>">
-                                ✓ Lanjut ke materi berikutnya
+                            <div class="alert alert-success small mb-3">
+                                <strong>✓ Selamat!</strong> Anda sudah menyelesaikan kuis ini dengan benar.
+                            </div>
+                            <a href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>&lesson=<?= (int)$lesson['id'] ?>&quiz=1"
+                               class="btn btn-success btn-sm">
+                                Lihat Hasil Kuis
                             </a>
                         <?php else: ?>
-                            <div class="alert alert-info small mt-2">
-                                Untuk membuka materi berikutnya, silakan kerjakan soal
-                                hingga semua jawaban benar.
-                            </div>
+                            <a href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>&lesson=<?= (int)$lesson['id'] ?>&quiz=1"
+                               class="btn btn-primary btn-sm">
+                                Kerjakan Soal →
+                            </a>
                         <?php endif; ?>
                     </div>
-                <?php else: ?>
-                    <div class="mt-3">
-                        <?php if ($hasPassedLesson): ?>
-                            <div class="alert alert-success small mb-0">
-                                <strong>✓ Selesai!</strong><br>
-                                Anda telah menyelesaikan semua materi di kursus ini.
-                                <a href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>" class="btn btn-sm btn-outline-primary mt-2">
-                                    Kembali ke kursus
-                                </a>
-                            </div>
-                        <?php else: ?>
-                            <div class="alert alert-info small">
-                                Untuk membuka materi berikutnya, silakan kerjakan soal
-                                hingga semua jawaban benar.
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-
+                </div>
             <?php endif; ?>
         </div>
 
-    </div>
-</section>
+        <!-- Tombol Navigasi Materi -->
+        <div class="mt-4">
+            <?php if ($hasPassedLesson): ?>
+                <?php if (!empty($nextLesson)): ?>
+                    <a href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>&lesson=<?= (int)$nextLesson['id'] ?>"
+                       class="btn btn-success w-100">
+                        ✓ Lanjut ke Materi Berikutnya: <?= htmlspecialchars($nextLesson['title']) ?> →
+                    </a>
+                <?php else: ?>
+                    <div class="alert alert-success">
+                        <p class="mb-2">🎉 <strong>Selamat!</strong> Anda telah menyelesaikan semua materi di kursus ini.</p>
+                        <a href="index.php?kursus=<?= htmlspecialchars($lesson['course_slug']) ?>" class="btn btn-sm btn-outline-primary">
+                            ← Kembali ke Detail Kursus
+                        </a>
+                    </div>
+                <?php endif; ?>
+            <?php else: ?>
+                <?php if ($hasQuiz): ?>
+                    <div class="alert alert-info">
+                        Untuk lanjut ke materi berikutnya, silakan selesaikan dan lulus kuis materi ini terlebih dahulu.
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
 
 <script>
     (function() {
         var list = document.getElementById('lesson-points');
         var btnNext = document.getElementById('btn-next-point');
         var hint = document.getElementById('lesson-hint');
-        var btnSubmit = document.getElementById('btn-submit-quiz');
 
-        // PERBAIKAN: Jika tidak ada list poin materi (lesson tanpa poin), langsung aktifkan form soal
+        // Jika tidak ada list poin materi, tidak perlu lakukan apa-apa
         if (!list || !btnNext) {
-            if (btnSubmit) btnSubmit.disabled = false;
             return;
         }
 
         var points = Array.prototype.slice.call(list.querySelectorAll('.lesson-point'));
         if (!points.length) {
-            if (btnSubmit) btnSubmit.disabled = false;
             return;
         }
 
@@ -731,58 +448,12 @@ if (!isset($hasPassedLesson)) {
                 btnNext.disabled = true;
 
                 // Semua poin sudah tampil
-                updateHint('Semua poin materi sudah ditampilkan. Soal bisa diaktifkan (tahap berikutnya).');
-                if (btnSubmit) btnSubmit.disabled = false;
+                updateHint('Semua poin materi sudah ditampilkan. Silakan klik "Kerjakan Soal" untuk melanjutkan.');
             } else {
                 // Sudah di poin terakhir sejak awal
                 btnNext.disabled = true;
-                updateHint('Semua poin materi sudah ditampilkan. Soal bisa diaktifkan (tahap berikutnya).');
-                if (btnSubmit) btnSubmit.disabled = false;
+                updateHint('Semua poin materi sudah ditampilkan. Silakan klik "Kerjakan Soal" untuk melanjutkan.');
             }
-        });
-    })();
-
-    // ============================================================
-    // PERBAIKAN: Simpan jawaban ke session saat user mengubah pilihan
-    // Tujuan: Agar pilihan tetap ada saat user kembali dari materi
-    // ============================================================
-    (function() {
-        var lessonId = <?= (int)$lesson['id'] ?>;
-        var form = document.querySelector('form');
-        if (!form) return;
-
-        // Tangkap semua radio button (pilihan soal)
-        var radioButtons = form.querySelectorAll('input[type="radio"]');
-        
-        radioButtons.forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                // Ekstrak question ID dari name attribute
-                // Format: q_<question_id>
-                var fieldName = this.name; // q_123
-                var questionId = fieldName.replace('q_', '');
-                var answer = this.value; // A, B, C, dll
-                
-                // Kirim ke server via AJAX untuk disimpan di session
-                var formData = new FormData();
-                formData.append('lesson_id', lessonId);
-                formData.append('question_id', questionId);
-                formData.append('answer', answer);
-                
-                fetch('save_quiz_answers.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function(data) {
-                    // Silent - jawaban sudah tersimpan
-                    console.log('Jawaban tersimpan:', data);
-                })
-                .catch(function(error) {
-                    console.error('Error menyimpan jawaban:', error);
-                });
-            });
         });
     })();
 </script>
