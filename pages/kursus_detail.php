@@ -131,7 +131,7 @@ if ($rowFirst) {
                     <div class="col-6 col-md-4">
                         <div class="small text-muted">Jumlah materi</div>
                         <div class="fw-semibold">
-                            <?= (int)$course['lessons'] ?> materi
+                            <?= count($lessonsAll) ?> materi
                         </div>
                     </div>
                 </div>

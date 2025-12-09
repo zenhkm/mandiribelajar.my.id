@@ -12,7 +12,12 @@ if (isset($_GET['delete_course'])) {
 }
 
 // Ambil Semua Kursus
-$stmt = $pdo->query("SELECT * FROM courses ORDER BY id DESC");
+$stmt = $pdo->query("
+    SELECT c.*, 
+           (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) as real_lesson_count
+    FROM courses c 
+    ORDER BY id DESC
+");
 $courses = $stmt->fetchAll();
 ?>
 
@@ -78,7 +83,7 @@ $courses = $stmt->fetchAll();
                                         <span class="badge bg-secondary">Segera Hadir</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= (int)$c['lessons'] ?></td>
+                                <td><?= (int)$c['real_lesson_count'] ?></td>
                                 <td class="text-end px-4">
                                     <a href="index.php?page=admin_modules&course_id=<?= $c['id'] ?>"
                                         class="btn btn-sm btn-warning me-1 text-dark fw-bold" title="Kelola Bab">Bab</a>

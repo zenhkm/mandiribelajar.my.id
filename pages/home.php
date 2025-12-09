@@ -6,7 +6,13 @@ check_login();
 $userId = $_SESSION['user']['id'] ?? 0;
 
 // 1. Ambil semua kursus
-$stmt = $pdo->query("SELECT * FROM courses ORDER BY id ASC");
+// Gunakan subquery untuk menghitung jumlah lesson yang sebenarnya
+$stmt = $pdo->query("
+    SELECT c.*, 
+           (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) as real_lesson_count
+    FROM courses c 
+    ORDER BY c.id ASC
+");
 $courses = $stmt->fetchAll();
 
 // 2. Hitung progres user per kursus
@@ -77,7 +83,8 @@ $totalMateriSelesai = array_sum($progressData);
                 <?php 
                     // Siapkan Variabel
                     $courseId    = $course['id'];
-                    $totalLesson = (int)$course['lessons'];
+                    // Gunakan real_lesson_count dari query, jika 0 fallback ke kolom lessons (opsional)
+                    $totalLesson = (int)$course['real_lesson_count'];
                     $passedCount = isset($progressData[$courseId]) ? (int)$progressData[$courseId] : 0;
                     $isAvailable = ($course['status'] === 'Tersedia');
                     
