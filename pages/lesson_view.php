@@ -103,7 +103,15 @@ if (!$canAccessLesson) {
 ?>
     <div class="container my-5">
         <div class="alert alert-warning">
-            Untuk mengakses materi ini, Anda harus <strong>lulus</strong> materi sebelumnya terlebih dahulu.
+            <h4 class="alert-heading h5">Akses Ditolak</h4>
+            <p>Untuk mengakses materi ini, Anda harus menyelesaikan dan lulus materi sebelumnya terlebih dahulu.</p>
+            <hr>
+            <p class="mb-0">
+                Silakan selesaikan materi: <br>
+                <a href="index.php?kursus=<?= htmlspecialchars($currentCourseSlug) ?>&lesson=<?= (int)$prevLesson['id'] ?>" class="btn btn-warning mt-2">
+                    ← Kembali ke <?= htmlspecialchars($prevLesson['title']) ?>
+                </a>
+            </p>
         </div>
     </div>
 <?php
