@@ -494,8 +494,10 @@ $nextLesson = $stmtNext->fetch();
         .then(function(res) { return res.json(); })
         .then(function(d) {
             if (d && d.status === 'success') {
+                var btnGoQuiz = document.getElementById('btn-go-quiz');
                 if (btnGoQuiz) {
                     btnGoQuiz.disabled = false;
+                    btnGoQuiz.removeAttribute('title');
                     // convert to clickable behavior
                     btnGoQuiz.addEventListener('click', function() {
                         var url = this.getAttribute('data-quiz-url');
