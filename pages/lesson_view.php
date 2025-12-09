@@ -299,18 +299,41 @@ if ($quizSubmitted && !empty($questions)) {
 if (!isset($hasPassedLesson)) {
     $hasPassedLesson = false;
 
-    // Cek ke database: Apakah user ini sudah pernah lulus materi ini?
-    $stmtCheckPass = $pdo->prepare("
-        SELECT has_passed 
-        FROM lesson_progress 
-        WHERE user_id = ? AND lesson_id = ? 
-        LIMIT 1
-    ");
-    $stmtCheckPass->execute([$userId, $lesson['id']]);
-    $rowPass = $stmtCheckPass->fetch();
-
-    if ($rowPass && (int)$rowPass['has_passed'] === 1) {
+    // LOGIC FIX: Jika tidak ada soal, user otomatis dianggap lulus
+    // (Supaya bisa lanjut ke materi berikutnya)
+    if (empty($questions)) {
         $hasPassedLesson = true;
+        
+        // Simpan ke database bahwa user sudah "lulus" lesson ini
+        try {
+            $stmtAutoPass = $pdo->prepare("
+                INSERT INTO lesson_progress (user_id, lesson_id, has_read, has_passed, attempts, last_score)
+                VALUES (:user_id, :lesson_id, 1, 1, 0, 100)
+                ON DUPLICATE KEY UPDATE
+                    has_passed = 1,
+                    updated_at = CURRENT_TIMESTAMP
+            ");
+            $stmtAutoPass->execute([
+                ':user_id'   => $userId,
+                ':lesson_id' => $lesson['id'],
+            ]);
+        } catch (Exception $e) {
+            // Biarkan, sudah otomatis lulus
+        }
+    } else {
+        // Cek ke database: Apakah user ini sudah pernah lulus materi ini?
+        $stmtCheckPass = $pdo->prepare("
+            SELECT has_passed 
+            FROM lesson_progress 
+            WHERE user_id = ? AND lesson_id = ? 
+            LIMIT 1
+        ");
+        $stmtCheckPass->execute([$userId, $lesson['id']]);
+        $rowPass = $stmtCheckPass->fetch();
+
+        if ($rowPass && (int)$rowPass['has_passed'] === 1) {
+            $hasPassedLesson = true;
+        }
     }
 }
 // ============================================================
