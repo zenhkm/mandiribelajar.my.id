@@ -2,6 +2,10 @@
 require_once "auth.php";
 check_login();
 
+// DEBUG: Aktifkan error reporting sementara
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 // 1. Validasi Input
 $courseSlug = isset($_GET['kursus']) ? $_GET['kursus'] : '';
 if (!$courseSlug) {
