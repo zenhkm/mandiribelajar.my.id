@@ -21,12 +21,10 @@ if (!$course) {
 }
 
 // 3. Cek Kelulusan (Validasi Server-Side)
-// Hitung total materi
 $stmtTotal = $pdo->prepare("SELECT COUNT(*) FROM lessons WHERE course_id = ?");
 $stmtTotal->execute([$courseId]);
 $totalLessons = $stmtTotal->fetchColumn();
 
-// Hitung materi yang lulus
 $stmtPassed = $pdo->prepare("
     SELECT COUNT(DISTINCT lesson_id) 
     FROM lesson_progress lp
@@ -40,192 +38,336 @@ if ($passedLessons < $totalLessons || $totalLessons == 0) {
     die("Anda belum menyelesaikan semua materi di kursus ini. ($passedLessons / $totalLessons)");
 }
 
-// 4. Generate Sertifikat dengan GD Library
-// Ukuran A4 Landscape (kurang lebih dalam pixel 72 DPI)
-// Width: 842, Height: 595. Kita pakai resolusi lebih tinggi dikit biar bagus: 1000 x 700
-$width  = 1000;
-$height = 700;
-
-$image = imagecreatetruecolor($width, $height);
-
-// Warna
-$white      = imagecolorallocate($image, 255, 255, 255);
-$black      = imagecolorallocate($image, 0, 0, 0);
-$grey       = imagecolorallocate($image, 100, 100, 100);
-$lightGrey  = imagecolorallocate($image, 240, 240, 240);
-$gold       = imagecolorallocate($image, 218, 165, 32);
-$blue       = imagecolorallocate($image, 0, 51, 102);
-
-// Background Putih
-imagefilledrectangle($image, 0, 0, $width, $height, $white);
-
-// Border Emas Tebal
-imagesetthickness($image, 10);
-imagerectangle($image, 20, 20, $width - 20, $height - 20, $gold);
-
-// Border Tipis Dalam
-imagesetthickness($image, 2);
-imagerectangle($image, 35, 35, $width - 35, $height - 35, $blue);
-
-// Fungsi Helper untuk Text Center
-function centerText($img, $size, $angle, $x, $y, $color, $font, $text) {
-    // Karena kita tidak punya font TTF eksternal yang pasti ada, kita pakai font bawaan GD (1-5)
-    // Font bawaan GD ukurannya kecil.
-    // Opsi: Gunakan imagestring (font 1-5) atau imagettftext jika ada font.
-    // Untuk amannya di server hosting standar, kita coba cari font sistem atau pakai font bawaan tapi di-scale (agak pecah).
-    // TERBAIK: Kita asumsikan server punya font Arial atau sejenis, atau kita pakai font bawaan GD dengan layout sederhana.
-    
-    // Kita pakai font bawaan GD (imagestring) karena paling aman tanpa file .ttf
-    // Font 5 adalah yang terbesar.
-    
-    $fontWidth  = imagefontwidth($font);
-    $textWidth  = strlen($text) * $fontWidth;
-    $centerX    = ($x - ($textWidth / 2));
-    
-    imagestring($img, $font, $centerX, $y, $text, $color);
+// Format Tanggal Indonesia
+function tgl_indo($tanggal){
+	$bulan = array (
+		1 =>   'Januari',
+		'Februari',
+		'Maret',
+		'April',
+		'Mei',
+		'Juni',
+		'Juli',
+		'Agustus',
+		'September',
+		'Oktober',
+		'November',
+		'Desember'
+	);
+	$pecahkan = explode('-', $tanggal);
+	
+	// variabel pecahkan 0 = tanggal
+	// variabel pecahkan 1 = bulan
+	// variabel pecahkan 2 = tahun
+ 
+	return $pecahkan[2] . ' ' . $bulan[ (int)$pecahkan[1] ] . ' ' . $pecahkan[0];
 }
-
-// Karena font bawaan GD (imagestring) sangat kecil untuk sertifikat 1000px,
-// Kita akan coba pakai imagettftext jika memungkinkan.
-// Kita coba cari font default di Windows/Linux.
-$fontFile = '';
-$os = PHP_OS;
-if (strtoupper(substr($os, 0, 3)) === 'WIN') {
-    $fontFile = 'C:\Windows\Fonts\arial.ttf';
-} else {
-    // Linux path umum
-    $fontFile = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'; 
-    if (!file_exists($fontFile)) {
-        $fontFile = '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf';
-    }
-}
-
-// Fallback jika font tidak ditemukan: Pakai font bawaan GD tapi kita buat gambar kecil lalu resize (agak buram tapi terbaca)
-// ATAU: Kita pakai font bawaan GD tapi layoutnya kita sesuaikan.
-// Mari kita coba pakai font bawaan GD saja tapi dengan teknik scaling sederhana atau layout yang rapi.
-// UPDATE: Kita pakai font bawaan GD (5) tapi kita posisikan dengan baik.
-
-// Header
-$text = "SERTIFIKAT KELULUSAN";
-// Font 5 width approx 9px, height 15px.
-// Center X = 1000/2 = 500.
-// Text width = len * 9.
-$len = strlen($text);
-$xPos = ($width - ($len * 15)) / 2; // Estimasi lebar font 5 agak besar
-// imagestring($image, 5, $xPos, 100, $text, $blue);
-// Font bawaan terlalu kecil untuk sertifikat resolusi ini.
-// SOLUSI: Kita gunakan imagefttext (FreeType) jika tersedia, biasanya ada di PHP modern.
-// Kita akan gunakan font file relatif jika ada, atau download font sementara? Tidak bisa download.
-// Kita akan gunakan font bawaan tapi kita perbesar gambarnya saat output? Tidak.
-// Kita akan gunakan font bawaan tapi kita buat teksnya "pixelated" besar dengan cara menggambar pixel manual? Terlalu rumit.
-// Kita akan gunakan font bawaan GD tapi kita zoom?
-// Opsi paling aman: Gunakan font bawaan GD tapi layoutnya minimalis.
-
-// Header "SERTIFIKAT"
-// Kita buat huruf besar dengan menggambar garis? Tidak.
-// Kita pakai imagestringup? Tidak.
-
-// Mari kita coba cari font Arial.ttf di folder layout/ atau root jika user punya.
-// Karena tidak ada, kita pakai font sistem. Jika gagal, fallback ke GD font.
-
-$useTTF = false;
-if (file_exists($fontFile)) {
-    $useTTF = true;
-}
-
-if ($useTTF) {
-    // Judul
-    $bbox = imagettfbbox(40, 0, $fontFile, "SERTIFIKAT KELULUSAN");
-    $textW = $bbox[2] - $bbox[0];
-    imagettftext($image, 40, 0, ($width - $textW)/2, 150, $blue, $fontFile, "SERTIFIKAT KELULUSAN");
-
-    // Subjudul
-    $text = "No: CERT/" . date('Y') . "/" . str_pad($courseId, 3, '0', STR_PAD_LEFT) . "/" . str_pad($userId, 4, '0', STR_PAD_LEFT);
-    $bbox = imagettfbbox(12, 0, $fontFile, $text);
-    $textW = $bbox[2] - $bbox[0];
-    imagettftext($image, 12, 0, ($width - $textW)/2, 190, $grey, $fontFile, $text);
-
-    // Diberikan kepada
-    $text = "Diberikan kepada:";
-    $bbox = imagettfbbox(16, 0, $fontFile, $text);
-    $textW = $bbox[2] - $bbox[0];
-    imagettftext($image, 16, 0, ($width - $textW)/2, 280, $black, $fontFile, $text);
-
-    // Nama User
-    $name = strtoupper($_SESSION['user']['name']);
-    $bbox = imagettfbbox(32, 0, $fontFile, $name);
-    $textW = $bbox[2] - $bbox[0];
-    imagettftext($image, 32, 0, ($width - $textW)/2, 340, $gold, $fontFile, $name);
-
-    // Atas kelulusan
-    $text = "Telah menyelesaikan seluruh materi dan ujian pada kursus:";
-    $bbox = imagettfbbox(16, 0, $fontFile, $text);
-    $textW = $bbox[2] - $bbox[0];
-    imagettftext($image, 16, 0, ($width - $textW)/2, 400, $black, $fontFile, $text);
-
-    // Nama Kursus
-    $courseTitle = $course['title'];
-    $bbox = imagettfbbox(24, 0, $fontFile, $courseTitle);
-    $textW = $bbox[2] - $bbox[0];
-    imagettftext($image, 24, 0, ($width - $textW)/2, 450, $blue, $fontFile, $courseTitle);
-
-    // Tanggal
-    $date = "Tanggal Lulus: " . date("d F Y");
-    $bbox = imagettfbbox(12, 0, $fontFile, $date);
-    $textW = $bbox[2] - $bbox[0];
-    imagettftext($image, 12, 0, ($width - $textW)/2, 550, $grey, $fontFile, $date);
-
-} else {
-    // FALLBACK JIKA TIDAK ADA FONT TTF (Tampilan Sederhana)
-    // Kita pakai font 5 (terbesar bawaan)
-    // Kita akali dengan membuat gambar kecil lalu di-resize? Tidak, pecah.
-    // Kita pakai layout sederhana saja.
-    
-    $font = 5;
-    $lineHeight = 20;
-    $y = 100;
-
-    $str = "SERTIFIKAT KELULUSAN";
-    $len = strlen($str) * 9; // approx width per char font 5
-    imagestring($image, $font, ($width - $len)/2, $y, $str, $blue);
-    
-    $y += 40;
-    $str = "No: CERT/" . date('Y') . "/" . $courseId . "/" . $userId;
-    $len = strlen($str) * 9;
-    imagestring($image, $font, ($width - $len)/2, $y, $str, $grey);
-
-    $y += 60;
-    $str = "Diberikan kepada:";
-    $len = strlen($str) * 9;
-    imagestring($image, $font, ($width - $len)/2, $y, $str, $black);
-
-    $y += 40;
-    $str = strtoupper($_SESSION['user']['name']);
-    $len = strlen($str) * 9;
-    // Hack: Tulis nama 2x geser 1px biar tebal
-    imagestring($image, $font, ($width - $len)/2, $y, $str, $gold);
-    imagestring($image, $font, ($width - $len)/2 + 1, $y, $str, $gold);
-
-    $y += 60;
-    $str = "Telah menyelesaikan kursus:";
-    $len = strlen($str) * 9;
-    imagestring($image, $font, ($width - $len)/2, $y, $str, $black);
-
-    $y += 40;
-    $str = $course['title'];
-    $len = strlen($str) * 9;
-    imagestring($image, $font, ($width - $len)/2, $y, $str, $blue);
-    imagestring($image, $font, ($width - $len)/2 + 1, $y, $str, $blue);
-
-    $y += 80;
-    $str = "Tanggal: " . date("d F Y");
-    $len = strlen($str) * 9;
-    imagestring($image, $font, ($width - $len)/2, $y, $str, $grey);
-}
-
-// Output Image
-header('Content-Type: image/png');
-header('Content-Disposition: attachment; filename="Sertifikat_' . $course['slug'] . '.png"');
-imagepng($image);
-imagedestroy($image);
 ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sertifikat Kelulusan - <?= htmlspecialchars($course['title']) ?></title>
+    <!-- Library untuk convert HTML ke PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Font Keren -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Great+Vibes&family=Lato:wght@300;400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #e9ecef;
+            font-family: 'Lato', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .toolbar {
+            width: 100%;
+            background: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .btn-download {
+            background-color: #DAA520;
+            color: #fff;
+            border: none;
+            padding: 10px 25px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .btn-download:hover {
+            background-color: #b8860b;
+        }
+        .btn-back {
+            background-color: transparent;
+            color: #ccc;
+            border: 1px solid #ccc;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+        .btn-back:hover {
+            background-color: #fff;
+            color: #333;
+        }
+
+        /* Area Sertifikat (A4 Landscape Ratio) */
+        #certificate-area {
+            width: 1123px; /* A4 width at 96dpi approx, scaled for quality */
+            height: 794px;
+            background: #fff;
+            margin: 30px auto;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+            /* Background Pattern */
+            background-image: radial-gradient(#f8f9fa 20%, transparent 20%),
+                              radial-gradient(#f8f9fa 20%, transparent 20%);
+            background-color: #fff;
+            background-position: 0 0, 50px 50px;
+            background-size: 100px 100px;
+        }
+
+        .border-outer {
+            position: absolute;
+            top: 20px; left: 20px; right: 20px; bottom: 20px;
+            border: 5px solid #1a3c5e; /* Dark Blue */
+        }
+        
+        .border-inner {
+            position: absolute;
+            top: 35px; left: 35px; right: 35px; bottom: 35px;
+            border: 2px solid #DAA520; /* Gold */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        /* Ornamen Sudut */
+        .corner-ornament {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background-repeat: no-repeat;
+            background-size: contain;
+            opacity: 0.2;
+        }
+        /* Kita pakai CSS shapes simple untuk ornamen jika tidak ada gambar */
+        .corner-tl { top: 10px; left: 10px; border-top: 10px solid #1a3c5e; border-left: 10px solid #1a3c5e; width: 100px; height: 100px; }
+        .corner-tr { top: 10px; right: 10px; border-top: 10px solid #1a3c5e; border-right: 10px solid #1a3c5e; width: 100px; height: 100px; }
+        .corner-bl { bottom: 10px; left: 10px; border-bottom: 10px solid #1a3c5e; border-left: 10px solid #1a3c5e; width: 100px; height: 100px; }
+        .corner-br { bottom: 10px; right: 10px; border-bottom: 10px solid #1a3c5e; border-right: 10px solid #1a3c5e; width: 100px; height: 100px; }
+
+        .header-title {
+            font-family: 'Cinzel', serif;
+            font-size: 64px;
+            color: #1a3c5e;
+            margin: 0;
+            letter-spacing: 5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .cert-no {
+            font-family: 'Lato', sans-serif;
+            font-size: 16px;
+            color: #666;
+            letter-spacing: 2px;
+            margin-bottom: 40px;
+        }
+
+        .presented-text {
+            font-family: 'Pinyon Script', cursive;
+            font-size: 32px;
+            color: #DAA520;
+            margin-bottom: 10px;
+        }
+
+        .student-name {
+            font-family: 'Great Vibes', cursive;
+            font-size: 86px;
+            color: #1a3c5e;
+            margin: 10px 0 30px 0;
+            line-height: 1.2;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            display: inline-block;
+            min-width: 500px;
+        }
+
+        .description {
+            font-size: 20px;
+            color: #444;
+            max-width: 800px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .course-name {
+            font-weight: 700;
+            color: #1a3c5e;
+            font-size: 28px;
+            display: block;
+            margin-top: 10px;
+            font-family: 'Cinzel', serif;
+        }
+
+        .footer-section {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            margin-top: 60px;
+            align-items: flex-end;
+        }
+
+        .signature-box {
+            text-align: center;
+            width: 250px;
+        }
+
+        .sign-img {
+            height: 60px;
+            margin-bottom: 10px;
+            font-family: 'Great Vibes', cursive;
+            font-size: 40px;
+            color: #1a3c5e;
+        }
+
+        .sign-line {
+            border-top: 2px solid #DAA520;
+            margin: 10px auto;
+            width: 100%;
+        }
+
+        .sign-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .sign-title {
+            font-size: 14px;
+            color: #777;
+        }
+
+        .seal-badge {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 4px double #DAA520;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #DAA520;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            letter-spacing: 1px;
+            box-shadow: 0 0 0 10px rgba(218, 165, 32, 0.1);
+            transform: rotate(-15deg);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="toolbar">
+        <button class="btn-download" onclick="generatePDF()">
+            <i class="bi bi-download"></i> Download PDF
+        </button>
+        <a href="index.php?kursus=<?= htmlspecialchars($course['slug']) ?>" class="btn-back">Kembali</a>
+    </div>
+
+    <div id="certificate-area">
+        <div class="border-outer"></div>
+        <div class="corner-tl"></div>
+        <div class="corner-tr"></div>
+        <div class="corner-bl"></div>
+        <div class="corner-br"></div>
+
+        <div class="border-inner">
+            
+            <h1 class="header-title">Sertifikat Kelulusan</h1>
+            <div class="cert-no">NO: CERT/<?= date('Y') ?>/<?= str_pad($courseId, 3, '0', STR_PAD_LEFT) ?>/<?= str_pad($userId, 4, '0', STR_PAD_LEFT) ?></div>
+
+            <div class="presented-text">Diberikan Kepada</div>
+            
+            <div class="student-name"><?= htmlspecialchars($_SESSION['user']['name']) ?></div>
+
+            <div class="description">
+                Atas keberhasilannya menyelesaikan seluruh materi pembelajaran dan ujian kompetensi pada kursus:
+                <span class="course-name"><?= htmlspecialchars($course['title']) ?></span>
+            </div>
+
+            <div class="footer-section">
+                <div class="signature-box">
+                    <div class="sign-img"><?= tgl_indo(date('Y-m-d')) ?></div>
+                    <div class="sign-line"></div>
+                    <div class="sign-name">Tanggal Lulus</div>
+                </div>
+
+                <div class="seal-badge">
+                    MANDIRI<br>BELAJAR<br>VERIFIED
+                </div>
+
+                <div class="signature-box">
+                    <!-- Simulasi Tanda Tangan -->
+                    <div class="sign-img">Administrator</div> 
+                    <div class="sign-line"></div>
+                    <div class="sign-name">Kepala Program</div>
+                    <div class="sign-title">Mandiri Belajar</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function generatePDF() {
+            const element = document.getElementById('certificate-area');
+            const button = document.querySelector('.btn-download');
+            
+            button.innerHTML = 'Sedang Memproses...';
+            button.disabled = true;
+
+            const opt = {
+                margin:       0,
+                filename:     'Sertifikat_<?= preg_replace("/[^a-zA-Z0-9]/", "_", $course['title']) ?>.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(function(){
+                button.innerHTML = 'Download PDF';
+                button.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
