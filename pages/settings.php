@@ -51,16 +51,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_change_password']
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-white fw-bold">Tampilan</div>
         <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label">Mode Tema</label>
-                <select id="themeSelect" class="form-select">
-                    <option value="auto">Otomatis (Ikut Perangkat)</option>
-                    <option value="light">Terang (Light)</option>
-                    <option value="dark">Gelap (Dark)</option>
-                </select>
-                <div class="form-text">
-                    Pilih "Otomatis" untuk menyesuaikan dengan pengaturan HP/Laptop Anda.
-                </div>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="autoThemeToggle">
+                <label class="form-check-label" for="autoThemeToggle">Ikuti Tema Perangkat (Otomatis)</label>
+            </div>
+            
+            <div class="form-check form-switch mb-3" id="manualThemeContainer">
+                <input class="form-check-input" type="checkbox" id="darkThemeToggle">
+                <label class="form-check-label" for="darkThemeToggle">Mode Gelap</label>
+            </div>
+            
+            <div class="form-text">
+                Aktifkan "Otomatis" agar tampilan menyesuaikan dengan pengaturan HP/Laptop Anda.
             </div>
         </div>
     </div>
@@ -90,16 +92,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_change_password']
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const themeSelect = document.getElementById('themeSelect');
+    const autoToggle = document.getElementById('autoThemeToggle');
+    const darkToggle = document.getElementById('darkThemeToggle');
+    const manualContainer = document.getElementById('manualThemeContainer');
     
     // Load saved setting
     const savedTheme = localStorage.getItem('appTheme') || 'auto';
-    themeSelect.value = savedTheme;
+    
+    // Initialize UI state
+    if (savedTheme === 'auto') {
+        autoToggle.checked = true;
+        darkToggle.disabled = true;
+        manualContainer.style.opacity = '0.5';
+        // Set dark toggle visual state based on system preference for clarity
+        darkToggle.checked = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } else {
+        autoToggle.checked = false;
+        darkToggle.disabled = false;
+        manualContainer.style.opacity = '1';
+        darkToggle.checked = (savedTheme === 'dark');
+    }
 
-    themeSelect.addEventListener('change', function() {
-        const theme = this.value;
-        localStorage.setItem('appTheme', theme);
-        applyTheme(theme);
+    // Handle Auto Toggle
+    autoToggle.addEventListener('change', function() {
+        if (this.checked) {
+            localStorage.setItem('appTheme', 'auto');
+            darkToggle.disabled = true;
+            manualContainer.style.opacity = '0.5';
+            // Update visual state of dark toggle to match system
+            darkToggle.checked = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme('auto');
+        } else {
+            // When turning off auto, default to current system state or light?
+            // Let's default to whatever the dark toggle currently shows (which matches system)
+            const newTheme = darkToggle.checked ? 'dark' : 'light';
+            localStorage.setItem('appTheme', newTheme);
+            darkToggle.disabled = false;
+            manualContainer.style.opacity = '1';
+            applyTheme(newTheme);
+        }
+    });
+
+    // Handle Dark Mode Toggle
+    darkToggle.addEventListener('change', function() {
+        if (!autoToggle.checked) {
+            const newTheme = this.checked ? 'dark' : 'light';
+            localStorage.setItem('appTheme', newTheme);
+            applyTheme(newTheme);
+        }
     });
 });
 </script>

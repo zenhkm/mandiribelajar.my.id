@@ -76,6 +76,65 @@ if (!isset($pageTitle)) {
         [data-bs-theme="dark"] .border {
             border-color: #333 !important;
         }
+        [data-bs-theme="dark"] .bg-light {
+            background-color: #2c2c2c !important;
+        }
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: #2c2c2c;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+        [data-bs-theme="dark"] .form-control:focus,
+        [data-bs-theme="dark"] .form-select:focus {
+            background-color: #333;
+            color: #fff;
+            border-color: #6ea8fe;
+        }
+        [data-bs-theme="dark"] .btn-outline-light {
+            color: #e0e0e0;
+            border-color: #444;
+        }
+        [data-bs-theme="dark"] .btn-outline-light:hover {
+            background-color: #444;
+            color: #fff;
+        }
+        [data-bs-theme="dark"] .hero-badge {
+            background: #1a2744;
+            color: #6ea8fe;
+        }
+        [data-bs-theme="dark"] .status-tersedia {
+            background: #0f3d24;
+            color: #75b798;
+        }
+        [data-bs-theme="dark"] .status-segera {
+            background: #3d2605;
+            color: #ffda6a;
+        }
+        [data-bs-theme="dark"] .mobile-bottom-nav .nav-item.active {
+            color: #6ea8fe;
+        }
+        [data-bs-theme="dark"] .text-primary {
+            color: #6ea8fe !important;
+        }
+        [data-bs-theme="dark"] .bg-primary {
+            background-color: #0d6efd !important; /* Keep brand color or slightly darken */
+        }
+        [data-bs-theme="dark"] a {
+            color: #6ea8fe;
+        }
+        [data-bs-theme="dark"] .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        [data-bs-theme="dark"] .btn-outline-primary {
+            color: #6ea8fe;
+            border-color: #6ea8fe;
+        }
+        [data-bs-theme="dark"] .btn-outline-primary:hover {
+            background-color: #6ea8fe;
+            color: #000;
+        }
 
         .navbar-brand span {
             font-weight: 700;
