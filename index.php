@@ -14,7 +14,7 @@ $isQuiz            = isset($_GET['quiz']) ? (int)$_GET['quiz'] : 0;
 $isAjax            = isset($_GET['ajax']) && $_GET['ajax'] == '1';
 
 $contentFile = '';
-$pageTitle   = 'Kursus Online';
+$pageTitle   = 'Mandiri Belajar';
 
 // -- ROUTE KE HALAMAN ADMIN & USER --
 if ($page === 'admin') {
@@ -91,7 +91,7 @@ if ($page === 'admin') {
     $contentFile = __DIR__ . '/pages/kursus_detail.php';
 
 } else {
-    $pageTitle = 'Kursus Online – Beranda';
+    $pageTitle = 'Mandiri Belajar – Beranda';
     $contentFile = __DIR__ . '/pages/home.php';
 }
 
