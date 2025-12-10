@@ -17,9 +17,64 @@ if (!isset($pageTitle)) {
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet">
 
+    <script>
+        // Apply theme immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('appTheme') || 'auto';
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (savedTheme === 'auto' && prefersDark)) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+                document.documentElement.classList.remove('dark-mode');
+            }
+        })();
+
+        // Function to be called from settings page
+        function applyTheme(theme) {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (theme === 'dark' || (theme === 'auto' && prefersDark)) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+                document.documentElement.classList.add('dark-mode');
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', 'light');
+                document.documentElement.classList.remove('dark-mode');
+            }
+        }
+    </script>
+
     <style>
         body {
             background: #f5f7fb;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        /* Dark Mode Overrides */
+        [data-bs-theme="dark"] body {
+            background: #121212 !important;
+            color: #e0e0e0;
+        }
+        [data-bs-theme="dark"] .navbar,
+        [data-bs-theme="dark"] .mobile-bottom-nav,
+        [data-bs-theme="dark"] .card,
+        [data-bs-theme="dark"] .list-group-item,
+        [data-bs-theme="dark"] .bg-white {
+            background-color: #1e1e1e !important;
+            color: #e0e0e0 !important;
+            border-color: #333 !important;
+        }
+        [data-bs-theme="dark"] .text-dark {
+            color: #e0e0e0 !important;
+        }
+        [data-bs-theme="dark"] .text-muted {
+            color: #a0a0a0 !important;
+        }
+        [data-bs-theme="dark"] .border-bottom,
+        [data-bs-theme="dark"] .border-top,
+        [data-bs-theme="dark"] .border {
+            border-color: #333 !important;
         }
 
         .navbar-brand span {

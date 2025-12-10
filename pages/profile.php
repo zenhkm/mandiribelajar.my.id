@@ -72,30 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_update_profile'])
         }
     }
 }
-
-// ==========================================
-// PROSES GANTI PASSWORD
-// ==========================================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_change_password'])) {
-    $oldPass = $_POST['old_password'];
-    $newPass = $_POST['new_password'];
-    $cnfPass = $_POST['confirm_password'];
-
-    if (!password_verify($oldPass, $user['password_hash'])) {
-        $error = "Password lama salah.";
-    } elseif (strlen($newPass) < 6) {
-        $error = "Password baru minimal 6 karakter.";
-    } elseif ($newPass !== $cnfPass) {
-        $error = "Konfirmasi password baru tidak cocok.";
-    } else {
-        $newHash = password_hash($newPass, PASSWORD_DEFAULT);
-        $stmtUpdPass = $pdo->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
-        $stmtUpdPass->execute([$newHash, $userId]);
-
-        header("Location: index.php?page=profile&msg=pass_changed");
-        exit;
-    }
-}
 ?>
 
 <div class="container my-5" style="max-width: 900px;">
@@ -162,34 +138,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_change_password']
                 </div>
             </div>
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-white fw-bold text-danger">Ganti Password</div>
-                <div class="card-body">
-                    <form method="post">
-                        <div class="mb-2">
-                            <label class="form-label small">Password Lama</label>
-                            <input type="password" name="old_password" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="mb-2">
-                            <label class="form-label small">Password Baru</label>
-                            <input type="password" name="new_password" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small">Ulangi Password Baru</label>
-                            <input type="password" name="confirm_password" class="form-control form-control-sm" required>
-                        </div>
-                        <button type="submit" name="btn_change_password" class="btn btn-outline-danger btn-sm w-100">Update Password</button>
-                    </form>
-                </div>
-            </div>
-
             <!-- Menu Lainnya (Mobile Friendly) -->
             <div class="card shadow-sm mt-4">
                 <div class="card-header bg-white fw-bold">Menu Lainnya</div>
                 <div class="list-group list-group-flush">
+                    <a href="index.php?page=settings" class="list-group-item list-group-item-action">
+                        ⚙️ Pengaturan & Ganti Password
+                    </a>
                     <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
                         <a href="index.php?page=admin" class="list-group-item list-group-item-action text-danger">
-                            ⚙️ Admin Panel
+                            🛠️ Admin Panel
                         </a>
                     <?php endif; ?>
                     <a href="auth.php?action=logout" class="list-group-item list-group-item-action text-danger" onclick="return confirm('Yakin ingin keluar?');">
