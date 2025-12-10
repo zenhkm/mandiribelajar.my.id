@@ -93,6 +93,50 @@ if (!isset($pageTitle)) {
             font-size: 0.85rem;
             font-weight: 600;
         }
+
+        /* Mobile Bottom Nav */
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #e0e4f0;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .mobile-bottom-nav .nav-item {
+            text-align: center;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.75rem;
+            flex: 1;
+            cursor: pointer;
+        }
+        .mobile-bottom-nav .nav-item.active {
+            color: #0d6efd;
+            font-weight: 600;
+        }
+        .mobile-bottom-nav .nav-icon {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+        /* Hide on desktop */
+        @media (min-width: 768px) {
+            .mobile-bottom-nav {
+                display: none;
+            }
+        }
+        /* Adjust main content for bottom nav on mobile */
+        @media (max-width: 767px) {
+            body {
+                padding-bottom: 70px; /* Height of bottom nav */
+            }
+        }
     </style>
 </head>
 
@@ -106,7 +150,7 @@ if (!isset($pageTitle)) {
             <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <span>Kursus</span>&nbsp;<span>Online</span>
             </a>
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center d-none d-md-flex">
                 <?php if (isset($_SESSION['user'])): ?>
 
                     <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
@@ -150,3 +194,5 @@ if (!isset($pageTitle)) {
             </div>
         </div>
     </nav>
+
+    <div id="main-content">

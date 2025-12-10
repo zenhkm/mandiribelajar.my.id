@@ -182,6 +182,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_change_password']
                     </form>
                 </div>
             </div>
+
+            <!-- Menu Lainnya (Mobile Friendly) -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-white fw-bold">Menu Lainnya</div>
+                <div class="list-group list-group-flush">
+                    <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
+                        <a href="index.php?page=admin" class="list-group-item list-group-item-action text-danger">
+                            ⚙️ Admin Panel
+                        </a>
+                    <?php endif; ?>
+                    <a href="auth.php?action=logout" class="list-group-item list-group-item-action text-danger" onclick="return confirm('Yakin ingin keluar?');">
+                        🚪 Logout
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
