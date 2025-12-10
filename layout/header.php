@@ -139,6 +139,10 @@ if (!isset($pageTitle)) {
                         </span>
                     </a>
 
+                    <a href="auth.php?action=logout" class="btn btn-outline-danger btn-sm ms-2" onclick="return confirm('Yakin ingin keluar?');">
+                        Logout
+                    </a>
+
                 <?php else: ?>
                     <a href="auth.php?action=login" class="btn btn-outline-light btn-sm me-2">Login</a>
                     <a href="auth.php?action=register" class="btn btn-warning btn-sm">Daftar</a>
