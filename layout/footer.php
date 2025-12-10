@@ -6,8 +6,16 @@ $userAvatar = $_SESSION['user']['avatar'] ?? null;
 
 <footer class="footer border-top bg-white mt-4 d-none d-md-block">
     <div class="container text-center">
-        Platform kursus dengan alur:
-        <em>Materi → Soal → Naik ke materi berikutnya</em>.
+        <div class="mb-2">
+            Platform kursus dengan alur: <em>Materi → Soal → Naik ke materi berikutnya</em>.
+        </div>
+        <div class="small">
+            <a href="index.php?page=about" class="text-decoration-none text-muted me-3">Tentang Kami</a>
+            <a href="index.php?page=privacy" class="text-decoration-none text-muted">Kebijakan Privasi</a>
+        </div>
+        <div class="mt-2 text-muted small">
+            &copy; <?= date('Y') ?> Mandiri Belajar. All rights reserved.
+        </div>
     </div>
 </footer>
 

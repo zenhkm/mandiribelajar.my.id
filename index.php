@@ -37,6 +37,14 @@ if ($page === 'admin') {
     $pageTitle = 'Pengaturan';
     $contentFile = __DIR__ . '/pages/settings.php';
 
+} elseif ($page === 'about') {
+    $pageTitle = 'Tentang Kami';
+    $contentFile = __DIR__ . '/pages/about.php';
+
+} elseif ($page === 'privacy') {
+    $pageTitle = 'Kebijakan Privasi';
+    $contentFile = __DIR__ . '/pages/privacy.php';
+
 } elseif ($page === 'admin_course_form') {
     $pageTitle = 'Form Kursus Admin';
     $contentFile = __DIR__ . '/pages/admin_course_form.php';

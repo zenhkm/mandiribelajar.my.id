@@ -145,6 +145,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_update_profile'])
                     <a href="index.php?page=settings" class="list-group-item list-group-item-action">
                         ⚙️ Pengaturan & Ganti Password
                     </a>
+                    <a href="index.php?page=about" class="list-group-item list-group-item-action">
+                        ℹ️ Tentang Kami
+                    </a>
+                    <a href="index.php?page=privacy" class="list-group-item list-group-item-action">
+                        🔒 Kebijakan Privasi
+                    </a>
                     <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
                         <a href="index.php?page=admin" class="list-group-item list-group-item-action text-danger">
                             🛠️ Admin Panel
