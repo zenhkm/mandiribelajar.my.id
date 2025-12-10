@@ -1,7 +1,7 @@
 <?php
 // layout/header.php
 if (!isset($pageTitle)) {
-    $pageTitle = 'Kursus Online';
+    $pageTitle = 'Mandiri Belajar';
 }
 ?>
 <!DOCTYPE html>
@@ -148,7 +148,15 @@ if (!isset($pageTitle)) {
     <nav class="navbar navbar-light bg-white border-bottom shadow-sm">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <span>Kursus</span>&nbsp;<span>Online</span>
+                <!-- Logo SVG -->
+                <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="me-2">
+                    <rect width="40" height="40" rx="10" fill="#0d6efd"/>
+                    <path d="M12 28V14L20 20L28 14V28" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="d-flex flex-column" style="line-height: 1.1;">
+                    <span class="fw-bold text-primary" style="font-size: 1.1rem;">Mandiri</span>
+                    <span class="fw-bold text-dark" style="font-size: 1.1rem;">Belajar</span>
+                </div>
             </a>
             <div class="d-flex align-items-center d-none d-md-flex">
                 <?php if (isset($_SESSION['user'])): ?>
