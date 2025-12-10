@@ -123,7 +123,7 @@ if (!empty($course['exam_question_limit']) && $course['exam_question_limit'] > 0
 
 // Ambil Soal secara Acak
 $stmtQ = $pdo->prepare("
-    SELECT q.id, q.question_text, q.question_image
+    SELECT q.id, q.question_text
     FROM lesson_questions q
     JOIN lessons l ON q.lesson_id = l.id
     WHERE l.course_id = ?
@@ -168,10 +168,6 @@ foreach ($allOptions as $opt) {
                     <div class="mb-4">
                         <p class="fw-bold mb-2"><?= ($index + 1) ?>. <?= nl2br(htmlspecialchars($q['question_text'])) ?></p>
                         
-                        <?php if (!empty($q['question_image'])): ?>
-                            <img src="uploads/<?= htmlspecialchars($q['question_image']) ?>" class="img-fluid mb-3 rounded" style="max-height: 200px;">
-                        <?php endif; ?>
-
                         <input type="hidden" name="q_ids[]" value="<?= $q['id'] ?>">
 
                         <div class="list-group">
