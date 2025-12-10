@@ -163,9 +163,30 @@ if ($lessonsAll) {
             <div class="col-12 col-lg-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
+<?php
+// Cek Status Uji Komprehensif
+$hasPassedExam = false;
+if ($isCourseComplete) {
+    // Cek apakah sudah lulus ujian
+    // Perlu cek tabel course_exam_attempts (pastikan tabel sudah dibuat)
+    try {
+        $stmtExam = $pdo->prepare("SELECT COUNT(*) FROM course_exam_attempts WHERE user_id = ? AND course_id = ? AND passed = 1");
+        $stmtExam->execute([$userId, $course['id']]);
+        if ($stmtExam->fetchColumn() > 0) {
+            $hasPassedExam = true;
+        }
+    } catch (Exception $e) {
+        // Fallback jika tabel belum ada, anggap belum lulus ujian (atau bypass jika error)
+        // $hasPassedExam = false; 
+    }
+}
+?>
+
                         <div class="section-label mb-2">
-                            <?php if ($isCourseComplete): ?>
+                            <?php if ($isCourseComplete && $hasPassedExam): ?>
                                 Kursus Selesai
+                            <?php elseif ($isCourseComplete): ?>
+                                Ujian Akhir
                             <?php elseif ($hasStarted): ?>
                                 Lanjut Belajar
                             <?php else: ?>
@@ -174,8 +195,10 @@ if ($lessonsAll) {
                         </div>
                         
                         <p class="small text-muted">
-                            <?php if ($isCourseComplete): ?>
-                                Selamat! Anda telah menyelesaikan semua materi di kursus ini.
+                            <?php if ($isCourseComplete && $hasPassedExam): ?>
+                                Selamat! Anda telah menyelesaikan semua materi dan lulus ujian akhir.
+                            <?php elseif ($isCourseComplete): ?>
+                                Materi selesai. Silakan ikuti Uji Komprehensif untuk mendapatkan sertifikat.
                             <?php elseif ($hasStarted): ?>
                                 Lanjutkan progres belajar Anda di materi terakhir yang belum selesai.
                             <?php else: ?>
@@ -183,10 +206,15 @@ if ($lessonsAll) {
                             <?php endif; ?>
                         </p>
 
-                        <?php if ($isCourseComplete): ?>
+                        <?php if ($isCourseComplete && $hasPassedExam): ?>
                             <a class="btn btn-success w-100 mb-2" target="_blank"
                                href="certificate.php?course_id=<?= (int)$course['id'] ?>">
                                 <i class="bi bi-award"></i> Download Sertifikat
+                            </a>
+                        <?php elseif ($isCourseComplete): ?>
+                            <a class="btn btn-warning w-100 mb-2 fw-bold"
+                               href="index.php?page=exam_view&kursus=<?= urlencode($course['slug']) ?>">
+                                <i class="bi bi-pencil-square"></i> Ikuti Uji Komprehensif
                             </a>
                         <?php elseif ($resumeLesson): ?>
                             <a class="btn btn-primary w-100 mb-2"

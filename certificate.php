@@ -38,6 +38,13 @@ if ($passedLessons < $totalLessons || $totalLessons == 0) {
     die("Anda belum menyelesaikan semua materi di kursus ini. ($passedLessons / $totalLessons)");
 }
 
+// 4. Cek Kelulusan Uji Komprehensif
+$stmtExam = $pdo->prepare("SELECT COUNT(*) FROM course_exam_attempts WHERE user_id = ? AND course_id = ? AND passed = 1");
+$stmtExam->execute([$userId, $courseId]);
+if ($stmtExam->fetchColumn() == 0) {
+    die("Anda belum lulus Uji Komprehensif. Silakan ikuti ujian terlebih dahulu.");
+}
+
 // Format Tanggal Indonesia
 function tgl_indo($tanggal){
 	$bulan = array (

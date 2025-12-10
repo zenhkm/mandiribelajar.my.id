@@ -25,6 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = $_POST['description'];
     $duration    = $_POST['duration'];
     
+    $examLimit   = !empty($_POST['exam_question_limit']) ? (int)$_POST['exam_question_limit'] : null;
+    $examGrade   = !empty($_POST['exam_passing_grade']) ? (int)$_POST['exam_passing_grade'] : 80;
+    $examShow    = isset($_POST['exam_show_score']) ? 1 : 0;
+    
     // Logic Upload Gambar
     $imageName = $course['image'] ?? null; // Default pakai gambar lama (kalau edit)
 
@@ -64,12 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 if ($id > 0) {
                     // UPDATE
-                    $sql = "UPDATE courses SET title=?, slug=?, image=?, level=?, status=?, description=?, duration=? WHERE id=?";
-                    $params = [$title, $slug, $imageName, $level, $status, $description, $duration, $id];
+                    $sql = "UPDATE courses SET title=?, slug=?, image=?, level=?, status=?, description=?, duration=?, exam_question_limit=?, exam_passing_grade=?, exam_show_score=? WHERE id=?";
+                    $params = [$title, $slug, $imageName, $level, $status, $description, $duration, $examLimit, $examGrade, $examShow, $id];
                 } else {
                     // INSERT BARU
-                    $sql = "INSERT INTO courses (title, slug, image, level, status, description, duration, lessons) VALUES (?, ?, ?, ?, ?, ?, ?, 0)";
-                    $params = [$title, $slug, $imageName, $level, $status, $description, $duration];
+                    $sql = "INSERT INTO courses (title, slug, image, level, status, description, duration, lessons, exam_question_limit, exam_passing_grade, exam_show_score) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)";
+                    $params = [$title, $slug, $imageName, $level, $status, $description, $duration, $examLimit, $examGrade, $examShow];
                 }
 
                 $stmt = $pdo->prepare($sql);
@@ -148,6 +152,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label class="form-label">Deskripsi Singkat</label>
                     <textarea name="description" class="form-control" rows="3"><?= htmlspecialchars($course['description'] ?? '') ?></textarea>
+                </div>
+
+                <hr>
+                <h6 class="mb-3">Pengaturan Uji Komprehensif</h6>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Limit Soal (0 = Auto)</label>
+                        <input type="number" name="exam_question_limit" class="form-control" 
+                               value="<?= htmlspecialchars($course['exam_question_limit'] ?? '') ?>" placeholder="Default: Auto">
+                        <small class="text-muted">Jika 0/kosong, sistem pakai aturan default (20/50/100).</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Passing Grade (0-100)</label>
+                        <input type="number" name="exam_passing_grade" class="form-control" 
+                               value="<?= htmlspecialchars($course['exam_passing_grade'] ?? '80') ?>">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Tampilkan Nilai?</label>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" name="exam_show_score" value="1" id="chkScore"
+                                <?= (!isset($course['exam_show_score']) || $course['exam_show_score'] == 1) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="chkScore">
+                                Ya, tampilkan nilai akhir
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="d-flex justify-content-between">
