@@ -87,6 +87,18 @@ if ($page === 'admin') {
     include __DIR__ . '/pages/admin_user_form.php';
     include __DIR__ . '/layout/footer.php';
 
+} elseif ($page === 'exam_view') {
+    $pageTitle = 'Uji Komprehensif';
+    include __DIR__ . '/layout/header.php';
+    include __DIR__ . '/pages/exam_view.php';
+    include __DIR__ . '/layout/footer.php';
+
+} elseif ($page === 'exam_result') {
+    $pageTitle = 'Hasil Ujian';
+    include __DIR__ . '/layout/header.php';
+    include __DIR__ . '/pages/exam_result.php';
+    include __DIR__ . '/layout/footer.php';
+
 // ...
 
 // -- ROUTE HALAMAN UTAMA (USER) --
