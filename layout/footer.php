@@ -37,7 +37,10 @@ $userAvatar = $_SESSION['user']['avatar'] ?? null;
         <span class="nav-icon">🔔</span>
         <span>Notifikasi</span>
     </a>
-    <a href="index.php?page=profile" class="nav-item" data-page="profile">
+    <?php 
+    $accountUrl = (isset($_SESSION['is_guest']) && $_SESSION['is_guest']) ? 'auth.php?action=login' : 'index.php?page=profile';
+    ?>
+    <a href="<?= $accountUrl ?>" class="nav-item" data-page="profile">
         <?php if (!empty($userAvatar) && file_exists('uploads/' . $userAvatar)): ?>
              <img src="uploads/<?= htmlspecialchars($userAvatar) ?>" class="rounded-circle" style="width: 24px; height: 24px; object-fit: cover; margin: 0 auto 2px; display: block;">
         <?php else: ?>
@@ -80,8 +83,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     navItems.forEach(item => {
         item.addEventListener('click', function(e) {
-            e.preventDefault();
             const url = this.getAttribute('href');
+            
+            // Jika link mengarah ke auth.php (Login/Logout), biarkan default (reload page)
+            if (url.includes('auth.php')) {
+                return;
+            }
+
+            e.preventDefault();
             handleNavigation(url, this);
         });
     });

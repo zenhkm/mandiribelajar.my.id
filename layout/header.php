@@ -349,8 +349,8 @@ if (!isset($pageTitle)) {
                     <?php endif; ?>
 
                     <?php if (isset($_SESSION['is_guest']) && $_SESSION['is_guest']): ?>
-                        <!-- Tampilan Header untuk Tamu (Tanpa Link Profil) -->
-                        <div class="d-flex align-items-center gap-2 border rounded-pill px-2 py-1 bg-light">
+                        <!-- Tampilan Header untuk Tamu (Link ke Login) -->
+                        <a href="auth.php?action=login" class="text-decoration-none d-flex align-items-center gap-2 border rounded-pill px-2 py-1 bg-light">
                             <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
                                 style="width: 32px; height: 32px; font-size: 0.9rem; font-weight: bold;">
                                 T
@@ -358,7 +358,7 @@ if (!isset($pageTitle)) {
                             <span class="text-dark small fw-semibold me-1 d-none d-sm-inline">
                                 Tamu
                             </span>
-                        </div>
+                        </a>
                     <?php else: ?>
                         <!-- Tampilan Header untuk Member (Link Profil Aktif) -->
                         <a href="index.php?page=profile" class="text-decoration-none d-flex align-items-center gap-2 border rounded-pill px-2 py-1 bg-light">
