@@ -31,7 +31,7 @@
                     </div>
                     <div>
                         <small class="text-muted d-block">Email</small>
-                        <span class="fw-medium">email@contoh.com</span> <!-- Ganti dengan email Anda -->
+                        <span class="fw-medium">zenhkm@gmail.com</span>
                     </div>
                 </div>
 
@@ -43,7 +43,7 @@
                     </div>
                     <div>
                         <small class="text-muted d-block">Instagram</small>
-                        <span class="fw-medium">@username_anda</span> <!-- Ganti dengan IG Anda -->
+                        <span class="fw-medium">@zainul.hakim</span>
                     </div>
                 </div>
 
@@ -55,7 +55,7 @@
                     </div>
                     <div>
                         <small class="text-muted d-block">WhatsApp / HP</small>
-                        <span class="fw-medium">0812-3456-7890</span> <!-- Ganti dengan Nomor HP Anda -->
+                        <span class="fw-medium">085743399595</span>
                     </div>
                 </div>
             </div>

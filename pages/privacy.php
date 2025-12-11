@@ -33,9 +33,9 @@
             </p>
             
             <div class="mt-3 p-3 bg-light rounded">
-                <p class="mb-1"><strong>Email:</strong> email@contoh.com</p>
-                <p class="mb-1"><strong>Instagram:</strong> @username_anda</p>
-                <p class="mb-0"><strong>WhatsApp:</strong> 0812-3456-7890</p>
+                <p class="mb-1"><strong>Email:</strong> zenhkm@gmail.com</p>
+                <p class="mb-1"><strong>Instagram:</strong> @zainul.hakim</p>
+                <p class="mb-0"><strong>WhatsApp:</strong> 085743399595</p>
             </div>
 
         </div>
