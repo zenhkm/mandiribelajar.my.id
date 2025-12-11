@@ -2,6 +2,12 @@
 require_once "auth.php";
 check_login();
 
+// Proteksi Halaman Profil untuk Tamu
+if (isset($_SESSION['is_guest']) && $_SESSION['is_guest']) {
+    header("Location: index.php");
+    exit;
+}
+
 $userId = $_SESSION['user']['id'];
 $msg    = isset($_GET['msg']) ? $_GET['msg'] : '';
 $error  = '';

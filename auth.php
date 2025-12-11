@@ -35,14 +35,14 @@ function login_as_guest() {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user'] = [
             'id'     => $user['id'],
-            'name'   => $user['name'],
+            'name'   => 'Tamu', // Tampilkan sebagai "Tamu" saja di sesi
             'role'   => $user['role'],
             'avatar' => $user['avatar'] ?? null
         ];
         $_SESSION['is_guest'] = true;
     } else {
         // Buat user guest baru
-        $name = "Tamu ({$safe_ip})";
+        $name = "Tamu"; // Simpan di database sebagai "Tamu" saja
         // Password random, tidak akan dipakai login manual
         $password_hash = password_hash(bin2hex(random_bytes(8)), PASSWORD_DEFAULT);
         

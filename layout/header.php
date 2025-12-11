@@ -348,38 +348,52 @@ if (!isset($pageTitle)) {
                         </a>
                     <?php endif; ?>
 
-                    <a href="index.php?page=profile" class="text-decoration-none d-flex align-items-center gap-2 border rounded-pill px-2 py-1 bg-light">
-
-                        <?php
-                        $userAvatar = $_SESSION['user']['avatar'] ?? null;
-                        $userName   = $_SESSION['user']['name'] ?? 'User';
-
-                        $avatarSrc = null;
-                        if (!empty($userAvatar)) {
-                            if (strpos($userAvatar, 'http') === 0) {
-                                $avatarSrc = $userAvatar;
-                            } elseif (file_exists('uploads/' . $userAvatar)) {
-                                $avatarSrc = 'uploads/' . $userAvatar;
-                            }
-                        }
-
-                        if ($avatarSrc):
-                        ?>
-                            <img src="<?= htmlspecialchars($avatarSrc) ?>"
-                                alt="User"
-                                class="rounded-circle"
-                                style="width: 32px; height: 32px; object-fit: cover;">
-                        <?php else: ?>
-                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                    <?php if (isset($_SESSION['is_guest']) && $_SESSION['is_guest']): ?>
+                        <!-- Tampilan Header untuk Tamu (Tanpa Link Profil) -->
+                        <div class="d-flex align-items-center gap-2 border rounded-pill px-2 py-1 bg-light">
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
                                 style="width: 32px; height: 32px; font-size: 0.9rem; font-weight: bold;">
-                                <?= strtoupper(substr($userName, 0, 1)) ?>
+                                T
                             </div>
-                        <?php endif; ?>
+                            <span class="text-dark small fw-semibold me-1 d-none d-sm-inline">
+                                Tamu
+                            </span>
+                        </div>
+                    <?php else: ?>
+                        <!-- Tampilan Header untuk Member (Link Profil Aktif) -->
+                        <a href="index.php?page=profile" class="text-decoration-none d-flex align-items-center gap-2 border rounded-pill px-2 py-1 bg-light">
 
-                        <span class="text-dark small fw-semibold me-1 d-none d-sm-inline">
-                            <?= htmlspecialchars($userName) ?>
-                        </span>
-                    </a>
+                            <?php
+                            $userAvatar = $_SESSION['user']['avatar'] ?? null;
+                            $userName   = $_SESSION['user']['name'] ?? 'User';
+
+                            $avatarSrc = null;
+                            if (!empty($userAvatar)) {
+                                if (strpos($userAvatar, 'http') === 0) {
+                                    $avatarSrc = $userAvatar;
+                                } elseif (file_exists('uploads/' . $userAvatar)) {
+                                    $avatarSrc = 'uploads/' . $userAvatar;
+                                }
+                            }
+
+                            if ($avatarSrc):
+                            ?>
+                                <img src="<?= htmlspecialchars($avatarSrc) ?>"
+                                    alt="User"
+                                    class="rounded-circle"
+                                    style="width: 32px; height: 32px; object-fit: cover;">
+                            <?php else: ?>
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px; font-size: 0.9rem; font-weight: bold;">
+                                    <?= strtoupper(substr($userName, 0, 1)) ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <span class="text-dark small fw-semibold me-1 d-none d-sm-inline">
+                                <?= htmlspecialchars($userName) ?>
+                            </span>
+                        </a>
+                    <?php endif; ?>
 
                     <?php if (!isset($_SESSION['is_guest'])): ?>
                     <a href="auth.php?action=logout" class="btn btn-outline-danger btn-sm ms-2" onclick="confirmAction(event, this.href, 'Yakin ingin keluar?', 'Ya, Logout')">
