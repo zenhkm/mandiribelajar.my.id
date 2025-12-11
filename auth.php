@@ -153,7 +153,9 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($user && password_verify($password, $user['password_hash'])) {
             // Hapus status guest jika ada
-            if (isset($_SESSION['is_guest'])) {
+            if (isset($_SESSION['is_guest']) && $_SESSION['is_guest']) {
+                $guestUserId = $_SESSION['user']['id'];
+                migrate_guest_data($guestUserId, $user['id']);
                 unset($_SESSION['is_guest']);
             }
 

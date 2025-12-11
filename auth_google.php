@@ -120,7 +120,9 @@ if (isset($_GET['code'])) {
 
         // Set Session Login
         // Hapus status guest jika ada
-        if (isset($_SESSION['is_guest'])) {
+        if (isset($_SESSION['is_guest']) && $_SESSION['is_guest']) {
+            $guestUserId = $_SESSION['user']['id'];
+            migrate_guest_data($guestUserId, $user['id']);
             unset($_SESSION['is_guest']);
         }
 
@@ -157,7 +159,9 @@ if (isset($_GET['code'])) {
 
             // Set Session Login
             // Hapus status guest jika ada
-            if (isset($_SESSION['is_guest'])) {
+            if (isset($_SESSION['is_guest']) && $_SESSION['is_guest']) {
+                $guestUserId = $_SESSION['user']['id'];
+                migrate_guest_data($guestUserId, $newUserId);
                 unset($_SESSION['is_guest']);
             }
 
