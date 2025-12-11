@@ -302,9 +302,18 @@ if (!isset($pageTitle)) {
                         $userAvatar = $_SESSION['user']['avatar'] ?? null;
                         $userName   = $_SESSION['user']['name'] ?? 'User';
 
-                        if (!empty($userAvatar) && file_exists('uploads/' . $userAvatar)):
+                        $avatarSrc = null;
+                        if (!empty($userAvatar)) {
+                            if (strpos($userAvatar, 'http') === 0) {
+                                $avatarSrc = $userAvatar;
+                            } elseif (file_exists('uploads/' . $userAvatar)) {
+                                $avatarSrc = 'uploads/' . $userAvatar;
+                            }
+                        }
+
+                        if ($avatarSrc):
                         ?>
-                            <img src="uploads/<?= htmlspecialchars($userAvatar) ?>"
+                            <img src="<?= htmlspecialchars($avatarSrc) ?>"
                                 alt="User"
                                 class="rounded-circle"
                                 style="width: 32px; height: 32px; object-fit: cover;">
