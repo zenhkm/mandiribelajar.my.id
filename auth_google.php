@@ -1,9 +1,19 @@
 <?php
 // auth_google.php
+// Aktifkan Error Reporting untuk Debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
 require_once 'config.php';
 require_once 'google_config.php';
+
+// Cek ekstensi cURL
+if (!function_exists('curl_init')) {
+    die("Error: PHP cURL extension is not enabled on this server.");
+}
 
 // Fungsi helper untuk melakukan request cURL
 function http_request($url, $post_data = null) {
@@ -11,6 +21,7 @@ function http_request($url, $post_data = null) {
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Matikan verifikasi SSL di localhost jika perlu
+    curl_setopt($ch, CURLOPT_USERAGENT, 'MandiriBelajar/1.0'); // Tambahkan User Agent
     
     if ($post_data) {
         curl_setopt($ch, CURLOPT_POST, true);
@@ -25,7 +36,13 @@ function http_request($url, $post_data = null) {
         die("CURL Error: " . $error);
     }
     
-    return json_decode($response, true);
+    $decoded = json_decode($response, true);
+    if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+        // Jika response bukan JSON, tampilkan raw response untuk debug
+        die("JSON Decode Error. Raw Response: " . htmlspecialchars($response));
+    }
+    
+    return $decoded;
 }
 
 // 1. Jika user mengklik tombol login Google (belum ada code)
@@ -117,7 +134,11 @@ if (isset($_GET['code'])) {
         // === USER BARU (REGISTER OTOMATIS) ===
         
         // Buat password random karena user login via Google
-        $random_password = bin2hex(random_bytes(8)); 
+        try {
+            $random_password = bin2hex(random_bytes(8)); 
+        } catch (Exception $e) {
+            $random_password = substr(md5(mt_rand()), 0, 16);
+        }
         $password_hash   = password_hash($random_password, PASSWORD_DEFAULT);
 
         // Insert ke database
