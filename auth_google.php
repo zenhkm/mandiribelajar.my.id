@@ -119,6 +119,11 @@ if (isset($_GET['code'])) {
         }
 
         // Set Session Login
+        // Hapus status guest jika ada
+        if (isset($_SESSION['is_guest'])) {
+            unset($_SESSION['is_guest']);
+        }
+
         $_SESSION['user_id'] = $user['id']; // Kompatibilitas kode lama
         $_SESSION['user'] = [
             'id'     => $user['id'],
@@ -151,6 +156,11 @@ if (isset($_GET['code'])) {
             $newUserId = $pdo->lastInsertId();
 
             // Set Session Login
+            // Hapus status guest jika ada
+            if (isset($_SESSION['is_guest'])) {
+                unset($_SESSION['is_guest']);
+            }
+
             $_SESSION['user_id'] = $newUserId;
             $_SESSION['user'] = [
                 'id'     => $newUserId,

@@ -152,6 +152,11 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && password_verify($password, $user['password_hash'])) {
+            // Hapus status guest jika ada
+            if (isset($_SESSION['is_guest'])) {
+                unset($_SESSION['is_guest']);
+            }
+
             // Simpan seluruh data user ke dalam array 'user'
             $_SESSION['user'] = [
                 'id' => $user['id'],
