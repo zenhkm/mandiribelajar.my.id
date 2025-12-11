@@ -25,9 +25,9 @@ $userAvatar = $_SESSION['user']['avatar'] ?? null;
         <span class="nav-icon">🏠</span>
         <span>Home</span>
     </a>
-    <a href="index.php" class="nav-item" data-page="materi">
-        <span class="nav-icon">📚</span>
-        <span>Materi</span>
+    <a href="index.php?page=progress" class="nav-item" data-page="progress">
+        <span class="nav-icon">📊</span>
+        <span>Progress</span>
     </a>
     <a href="index.php?page=messages" class="nav-item" data-page="messages">
         <span class="nav-icon">💬</span>

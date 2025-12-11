@@ -33,6 +33,10 @@ if ($page === 'admin') {
     $pageTitle = 'Profil Saya';
     $contentFile = __DIR__ . '/pages/profile.php';
     
+} elseif ($page === 'progress') {
+    $pageTitle = 'Progress Belajar';
+    $contentFile = __DIR__ . '/pages/progress.php';
+
 } elseif ($page === 'settings') {
     $pageTitle = 'Pengaturan';
     $contentFile = __DIR__ . '/pages/settings.php';
