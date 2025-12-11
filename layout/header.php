@@ -20,7 +20,49 @@ if (!isset($pageTitle)) {
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet">
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
+        // Global Helper for SweetAlert2 Confirmations
+        function confirmAction(event, url, message, confirmText = 'Ya, Lanjutkan!') {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Konfirmasi',
+                text: message,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        }
+
+        function confirmSubmit(event, formId, message) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Konfirmasi',
+                text: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Kirim!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // If formId is a string, get element, else assume it's the form element itself
+                    const form = (typeof formId === 'string') ? document.getElementById(formId) : formId;
+                    if(form) form.submit();
+                }
+            });
+        }
+
         // Apply theme immediately to prevent flash
         (function() {
             const savedTheme = localStorage.getItem('appTheme') || 'auto';
@@ -332,7 +374,7 @@ if (!isset($pageTitle)) {
                         </span>
                     </a>
 
-                    <a href="auth.php?action=logout" class="btn btn-outline-danger btn-sm ms-2" onclick="return confirm('Yakin ingin keluar?');">
+                    <a href="auth.php?action=logout" class="btn btn-outline-danger btn-sm ms-2" onclick="confirmAction(event, this.href, 'Yakin ingin keluar?', 'Ya, Logout')">
                         Logout
                     </a>
 

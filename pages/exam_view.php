@@ -239,7 +239,7 @@ foreach ($allOptions as $opt) {
                                 Selanjutnya &raquo;
                             </button>
                             
-                            <button type="submit" name="submit_exam" class="btn btn-success px-4" id="btnFinish" style="display:none;" onclick="return confirm('Yakin ingin mengumpulkan jawaban?');">
+                            <button type="submit" name="submit_exam" class="btn btn-success px-4" id="btnFinish" style="display:none;" onclick="confirmSubmit(event, this.form, 'Yakin ingin mengumpulkan jawaban?')">
                                 Selesai & Kumpulkan
                             </button>
                         </div>

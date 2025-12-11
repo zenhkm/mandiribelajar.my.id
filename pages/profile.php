@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['btn_update_profile'])
                             🛠️ Admin Panel
                         </a>
                     <?php endif; ?>
-                    <a href="auth.php?action=logout" class="list-group-item list-group-item-action text-danger" onclick="return confirm('Yakin ingin keluar?');">
+                    <a href="auth.php?action=logout" class="list-group-item list-group-item-action text-danger" onclick="confirmAction(event, this.href, 'Yakin ingin keluar?', 'Ya, Logout')">
                         🚪 Logout
                     </a>
                 </div>

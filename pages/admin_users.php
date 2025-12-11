@@ -8,7 +8,17 @@ if (isset($_GET['delete_user'])) {
     
     // Proteksi: Jangan hapus diri sendiri!
     if ($uid == $_SESSION['user']['id']) {
-        echo "<script>alert('Anda tidak bisa menghapus akun sendiri!'); window.location='index.php?page=admin_users';</script>";
+        echo "<script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Anda tidak bisa menghapus akun sendiri!'
+                }).then(() => {
+                    window.location='index.php?page=admin_users';
+                });
+            });
+        </script>";
         exit;
     }
 
@@ -73,7 +83,7 @@ $users = $stmt->fetchAll();
                                 <?php if($u['id'] != $_SESSION['user']['id']): ?>
                                     <a href="index.php?page=admin_users&delete_user=<?= $u['id'] ?>" 
                                        class="btn btn-sm btn-outline-danger"
-                                       onclick="return confirm('Yakin hapus user ini? Data nilai dan progres belajarnya akan hilang permanen!');">Hapus</a>
+                                       onclick="confirmAction(event, this.href, 'Yakin hapus user ini? Data nilai dan progres belajarnya akan hilang permanen!', 'Ya, Hapus User')">Hapus</a>
                                 <?php endif; ?>
                             </td>
                         </tr>

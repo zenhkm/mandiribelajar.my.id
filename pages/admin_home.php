@@ -96,7 +96,7 @@ $courses = $stmt->fetchAll();
 
                                     <a href="index.php?page=admin&delete_course=<?= $c['id'] ?>"
                                         class="btn btn-sm btn-outline-danger ms-1"
-                                        onclick="return confirm('Yakin hapus kursus ini?');">×</a>
+                                        onclick="confirmAction(event, this.href, 'Yakin hapus kursus ini?', 'Ya, Hapus Kursus')">×</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

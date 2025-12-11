@@ -73,7 +73,7 @@ $modules = $stmtM->fetchAll();
                                 <td class="text-end px-3">
                                     <a href="index.php?page=admin_modules&course_id=<?= $courseId ?>&delete_mod=<?= $m['id'] ?>" 
                                        class="btn btn-sm btn-danger"
-                                       onclick="return confirm('Hapus Bab ini? PERINGATAN: Semua materi di dalam bab ini juga akan terhapus!');">Hapus</a>
+                                       onclick="confirmAction(event, this.href, 'Hapus Bab ini? PERINGATAN: Semua materi di dalam bab ini juga akan terhapus!', 'Ya, Hapus Bab')">Hapus</a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

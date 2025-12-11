@@ -92,7 +92,7 @@ $lessons = $stmt->fetchAll();
                                         class="btn btn-sm btn-outline-primary">Edit</a>
                                     <a href="index.php?page=admin_lessons&course_id=<?= $courseId ?>&delete_lesson=<?= $l['id'] ?>"
                                         class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('Hapus materi ini?');">Hapus</a>
+                                        onclick="confirmAction(event, this.href, 'Hapus materi ini?', 'Ya, Hapus Materi')">Hapus</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

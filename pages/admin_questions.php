@@ -76,7 +76,7 @@ $questions = $stmtQ->fetchAll();
                                    class="btn btn-sm btn-outline-primary">Edit</a>
                                 <a href="index.php?page=admin_questions&lesson_id=<?= $lessonId ?>&course_id=<?= $courseId ?>&delete_q=<?= $q['id'] ?>" 
                                    class="btn btn-sm btn-outline-danger"
-                                   onclick="return confirm('Hapus soal ini beserta pilihan jawabannya?');">Hapus</a>
+                                   onclick="confirmAction(event, this.href, 'Hapus soal ini beserta pilihan jawabannya?', 'Ya, Hapus Soal')">Hapus</a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
