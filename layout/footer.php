@@ -29,11 +29,17 @@ $userAvatar = $_SESSION['user']['avatar'] ?? null;
         <span class="nav-icon">📊</span>
         <span>Progress</span>
     </a>
-    <a href="index.php?page=messages" class="nav-item" data-page="messages">
+    <?php 
+    // Cek status login/tamu untuk proteksi menu
+    $isGuestOrNotLoggedIn = (isset($_SESSION['is_guest']) && $_SESSION['is_guest']) || !isset($_SESSION['user']);
+    $msgUrl = $isGuestOrNotLoggedIn ? 'auth.php?action=login' : 'index.php?page=messages';
+    $notifUrl = $isGuestOrNotLoggedIn ? 'auth.php?action=login' : 'index.php?page=notifications';
+    ?>
+    <a href="<?= $msgUrl ?>" class="nav-item" data-page="messages">
         <span class="nav-icon">💬</span>
         <span>Pesan</span>
     </a>
-    <a href="index.php?page=notifications" class="nav-item" data-page="notifications">
+    <a href="<?= $notifUrl ?>" class="nav-item" data-page="notifications">
         <span class="nav-icon">🔔</span>
         <span>Notifikasi</span>
     </a>
