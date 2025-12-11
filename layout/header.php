@@ -11,6 +11,9 @@ if (!isset($pageTitle)) {
     <meta charset="UTF-8">
     <title><?= htmlspecialchars($pageTitle) ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
     <!-- Bootstrap 5 CDN -->
     <link
