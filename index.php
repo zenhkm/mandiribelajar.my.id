@@ -2,7 +2,7 @@
 ob_start();
 
 // index.php
-require __DIR__ . '/config.php';
+require_once __DIR__ . '/config.php';
 require_once "auth.php";
 check_login();
 

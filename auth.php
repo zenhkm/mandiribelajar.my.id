@@ -1,6 +1,6 @@
 <?php
 // auth.php
-require __DIR__ . '/config.php';
+require_once __DIR__ . '/config.php';
 
 $action = isset($_GET['action']) ? $_GET['action'] : 'login';
 $errors = [];
