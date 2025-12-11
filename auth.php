@@ -10,8 +10,63 @@ $success = '';
 // BENAR:
 function check_login() {
     if (!isset($_SESSION['user_id'])) {
-        header("Location: auth.php?action=login"); 
-        exit;
+        // Jika belum login, otomatis login sebagai tamu (Guest)
+        login_as_guest();
+    }
+}
+
+function login_as_guest() {
+    global $pdo;
+    
+    // Dapatkan IP Address
+    $ip = $_SERVER['REMOTE_ADDR'];
+    // Bersihkan IP agar aman untuk string
+    $safe_ip = preg_replace('/[^0-9a-fA-F:.]/', '', $ip);
+    
+    $guest_email = "guest_{$safe_ip}@mandiribelajar.local";
+    
+    // Cek apakah user guest ini sudah ada
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
+    $stmt->execute([$guest_email]);
+    $user = $stmt->fetch();
+    
+    if ($user) {
+        // User guest sudah ada, login
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user'] = [
+            'id'     => $user['id'],
+            'name'   => $user['name'],
+            'role'   => $user['role'],
+            'avatar' => $user['avatar'] ?? null
+        ];
+        $_SESSION['is_guest'] = true;
+    } else {
+        // Buat user guest baru
+        $name = "Tamu ({$safe_ip})";
+        // Password random, tidak akan dipakai login manual
+        $password_hash = password_hash(bin2hex(random_bytes(8)), PASSWORD_DEFAULT);
+        
+        $stmtInsert = $pdo->prepare("
+            INSERT INTO users (name, email, password_hash, role, created_at) 
+            VALUES (?, ?, ?, 'student', NOW())
+        ");
+        
+        if ($stmtInsert->execute([$name, $guest_email, $password_hash])) {
+            $newUserId = $pdo->lastInsertId();
+            $_SESSION['user_id'] = $newUserId;
+            $_SESSION['user'] = [
+                'id'     => $newUserId,
+                'name'   => $name,
+                'role'   => 'student',
+                'avatar' => null
+            ];
+            $_SESSION['is_guest'] = true;
+        } else {
+            // Fallback jika gagal create user (misal database error)
+            // Redirect ke login page biasa
+            header("Location: auth.php?action=login"); 
+            exit;
+        }
     }
 }
 
@@ -29,7 +84,8 @@ function check_admin() {
 }
 
 // PERBAIKAN: Tambahkan cek basename()
-if (basename($_SERVER['PHP_SELF']) === 'auth.php' && isset($_SESSION['user']) && $action === 'login' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+// Izinkan akses ke halaman login jika user adalah Guest
+if (basename($_SERVER['PHP_SELF']) === 'auth.php' && isset($_SESSION['user']) && !isset($_SESSION['is_guest']) && $action === 'login' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: index.php');
     exit;
 }

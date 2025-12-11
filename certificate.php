@@ -45,6 +45,47 @@ if ($stmtExam->fetchColumn() == 0) {
     die("Anda belum lulus Uji Komprehensif. Silakan ikuti ujian terlebih dahulu.");
 }
 
+// 5. Cek Mode Tamu (Guest)
+if (isset($_SESSION['is_guest']) && $_SESSION['is_guest']) {
+    // Tampilkan halaman preview saja, tanpa opsi download PDF
+    include __DIR__ . '/layout/header.php';
+    ?>
+    <div class="container my-5 text-center">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <h2 class="text-primary mb-4">Selamat! Anda Telah Menyelesaikan Kursus</h2>
+                <h4 class="mb-3"><?= htmlspecialchars($course['title']) ?></h4>
+                
+                <div class="alert alert-warning my-4" role="alert">
+                    <h4 class="alert-heading">Mode Tamu Terdeteksi</h4>
+                    <p>Anda saat ini mengakses sebagai Tamu. Sertifikat hanya dapat dilihat (preview) tetapi <strong>tidak dapat didownload</strong>.</p>
+                    <hr>
+                    <p class="mb-0">Silakan <a href="auth.php?action=login" class="fw-bold">Login</a> atau <a href="auth.php?action=register" class="fw-bold">Daftar</a> sebagai member untuk mendownload sertifikat resmi Anda.</p>
+                </div>
+
+                <div class="certificate-preview border p-3 mb-4" style="background: #f8f9fa; position: relative; overflow: hidden;">
+                    <!-- Simple HTML Preview of Certificate -->
+                    <div style="border: 10px solid #0d6efd; padding: 40px; background: white; color: #333;">
+                        <h1 style="font-family: serif; color: #0d6efd;">SERTIFIKAT KELULUSAN</h1>
+                        <p>Diberikan kepada:</p>
+                        <h2 style="font-family: serif; text-decoration: underline;"><?= htmlspecialchars($_SESSION['user']['name']) ?></h2>
+                        <p>Telah menyelesaikan kursus:</p>
+                        <h3><?= htmlspecialchars($course['title']) ?></h3>
+                        <p>Pada tanggal: <?= date('d F Y') ?></p>
+                        <div style="margin-top: 30px; font-size: 0.8rem; color: #aaa;">PREVIEW ONLY - NOT VALID</div>
+                    </div>
+                </div>
+
+                <a href="index.php?page=kursus_detail&id=<?= $courseId ?>" class="btn btn-secondary">Kembali ke Kursus</a>
+                <a href="auth.php?action=login" class="btn btn-primary">Login untuk Download</a>
+            </div>
+        </div>
+    </div>
+    <?php
+    include __DIR__ . '/layout/footer.php';
+    exit; // Stop script here, do not generate PDF
+}
+
 // Format Tanggal Indonesia
 function tgl_indo($tanggal){
 	$bulan = array (

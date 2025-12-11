@@ -334,6 +334,13 @@ if (!isset($pageTitle)) {
             </a>
             <div class="d-flex align-items-center d-none d-md-flex">
                 <?php if (isset($_SESSION['user'])): ?>
+                    
+                    <?php if (isset($_SESSION['is_guest']) && $_SESSION['is_guest']): ?>
+                        <div class="alert alert-warning py-1 px-2 mb-0 me-2 d-flex align-items-center" style="font-size: 0.8rem;">
+                            <span class="me-2">⚠️ Mode Tamu</span>
+                            <a href="auth.php?action=login" class="btn btn-sm btn-primary py-0" style="font-size: 0.8rem;">Login Member</a>
+                        </div>
+                    <?php endif; ?>
 
                     <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'admin'): ?>
                         <a href="index.php?page=admin" class="btn btn-danger btn-sm me-2">
@@ -374,9 +381,11 @@ if (!isset($pageTitle)) {
                         </span>
                     </a>
 
+                    <?php if (!isset($_SESSION['is_guest'])): ?>
                     <a href="auth.php?action=logout" class="btn btn-outline-danger btn-sm ms-2" onclick="confirmAction(event, this.href, 'Yakin ingin keluar?', 'Ya, Logout')">
                         Logout
                     </a>
+                    <?php endif; ?>
 
                 <?php else: ?>
                     <a href="auth.php?action=login" class="btn btn-outline-light btn-sm me-2">Login</a>
@@ -387,3 +396,12 @@ if (!isset($pageTitle)) {
     </nav>
 
     <div id="main-content">
+        <?php if (isset($_SESSION['is_guest']) && $_SESSION['is_guest']): ?>
+            <div class="container mt-3">
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>Perhatian!</strong> Anda sedang mengakses sebagai Tamu. Progress belajar Anda mungkin hilang jika IP berubah atau cache dibersihkan. 
+                    <a href="auth.php?action=login" class="alert-link">Login atau Daftar</a> untuk menyimpan progress secara permanen.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+        <?php endif; ?>
