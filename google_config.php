@@ -15,6 +15,6 @@ define('GOOGLE_REDIRECT_URL', 'http://mandiribelajar.my.id/auth_google.php');
 // Contoh: https://mandiribelajar.my.id/auth_google.php
 
 // (Opsional) Autoload jika ada, tapi tidak wajib untuk versi cURL
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    require_once __DIR__ . '/vendor/autoload.php';
-}
+// if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+//    require_once __DIR__ . '/vendor/autoload.php';
+// }
