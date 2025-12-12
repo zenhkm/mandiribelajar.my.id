@@ -310,13 +310,85 @@ if (!isset($pageTitle)) {
                 justify-content: center;
             }
         }
+
+        /* Page Loader */
+        #page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        #page-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-logo {
+            width: 80px;
+            height: 80px;
+            animation: pulse-logo 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-logo {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.8; }
+        }
     </style>
 </head>
 
 <body>
 
+    <!-- Page Loader Overlay -->
+    <div id="page-loader">
+        <svg width="80" height="80" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="loader-logo">
+            <rect width="40" height="40" rx="10" fill="#0d6efd"/>
+            <path d="M12 28V14L20 20L28 14V28" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
 
+    <script>
+        // Hide loader when page is fully loaded
+        window.addEventListener('load', function() {
+            const loader = document.getElementById('page-loader');
+            if (loader) {
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                }, 300); // Slight delay for smoothness
+            }
+        });
 
+        // Show loader on link click (optional, for smoother feel between pages)
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.addEventListener('click', function(e) {
+                const target = e.target.closest('a');
+                if (target) {
+                    const href = target.getAttribute('href');
+                    const targetAttr = target.getAttribute('target');
+                    
+                    // Don't show loader for:
+                    // 1. Anchor links (#)
+                    // 2. New tab links (_blank)
+                    // 3. JavaScript links
+                    // 4. Empty links
+                    if (href && 
+                        !href.startsWith('#') && 
+                        targetAttr !== '_blank' && 
+                        !href.startsWith('javascript:') &&
+                        !e.ctrlKey && !e.metaKey) {
+                        
+                        const loader = document.getElementById('page-loader');
+                        if (loader) loader.classList.remove('hidden');
+                    }
+                }
+            });
+        });
+    </script>
 
     <nav class="navbar navbar-light bg-white border-bottom shadow-sm">
         <div class="container">
