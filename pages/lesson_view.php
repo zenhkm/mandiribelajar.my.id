@@ -276,7 +276,7 @@ $nextLesson = $stmtNext->fetch();
                             }
                             ?>
                             <?php if (!empty($points)): ?>
-                                <ol id="lesson-points" class="small">
+                                <ul id="lesson-points" class="small lesson-points-list">
                                     <?php foreach ($points as $i => $p): ?>
                                         <?php
                                         // Hitung jumlah kata
@@ -293,7 +293,18 @@ $nextLesson = $stmtNext->fetch();
                                             <?= nl2br(htmlspecialchars($p)) ?>
                                         </li>
                                     <?php endforeach; ?>
-                                </ol>
+                                </ul>
+
+                                <style>
+                                    #lesson-points {
+                                        list-style: disc;
+                                        padding-left: 2rem;
+                                    }
+                                    #lesson-points .lesson-point {
+                                        margin-bottom: 0.75rem;
+                                        line-height: 1.6;
+                                    }
+                                </style>
 
                                 <div class="d-flex align-items-center gap-2 mt-2">
                                     <style>
