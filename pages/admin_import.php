@@ -71,16 +71,24 @@ if (isset($_GET['download_template'])) {
     
     if ($type === 'lessons') {
         // Header
-        $headers = ['Judul Materi', 'Tipe Konten (text/video)', 'Isi Materi', 'URL Video'];
+        $headers = ['Judul Materi', 'Tipe Konten (text/video)', 'Isi Materi (Gunakan Ctrl+Enter untuk Line Break)', 'URL Video'];
         $sheet->fromArray([$headers], NULL, 'A1');
         // Contoh Data
-        $example = ['Contoh Judul', 'text', 'Isi materi disini...', ''];
+        $example = ['Contoh Judul', 'text', 'Isi materi disini...
+Bisa mengandung multiple line dengan Ctrl+Enter', ''];
         $sheet->fromArray([$example], NULL, 'A2');
         
-        // Auto size columns
-        foreach(range('A','D') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
+        // Set wrap text untuk kolom C agar line break terlihat jelas
+        $sheet->getStyle('C:C')->getAlignment()->setWrapText(true);
+        
+        // Set column width
+        $sheet->getColumnDimension('A')->setWidth(20);
+        $sheet->getColumnDimension('B')->setWidth(15);
+        $sheet->getColumnDimension('C')->setWidth(40);
+        $sheet->getColumnDimension('D')->setWidth(30);
+        
+        // Set row height agar konten dengan multiple line terlihat
+        $sheet->getRowDimension('2')->setRowHeight(60);
 
         // Data Validation untuk Tipe Konten (Kolom B)
         $validation = $sheet->getCell('B2')->getDataValidation();
@@ -313,6 +321,9 @@ $courses = $stmt->fetchAll();
                     <i class="fas fa-file-excel me-1"></i> Import Materi (Lesson)
                 </div>
                 <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <small><strong>Tip:</strong> Untuk membuat line break di Excel, gunakan <kbd>Ctrl+Enter</kbd> (Windows) atau <kbd>Cmd+Enter</kbd> (Mac) di dalam cell.</small>
+                    </div>
                     <form action="" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="import_type" value="lessons">
                         <div class="mb-3">
