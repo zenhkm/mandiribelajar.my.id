@@ -307,12 +307,7 @@ $nextLesson = $stmtNext->fetch();
                                             font-size: 1.2rem;
                                         }
                                     </style>
-                                    <button type="button"
-                                        id="btn-next-point"
-                                        class="btn btn-primary btn-sm"
-                                        disabled>
-                                        <span class="hourglass-spin">⏳</span>
-                                    </button>
+                                    <span id="timer-icon" class="hourglass-spin">⏳</span>
                                     <small class="text-muted" id="lesson-hint">
                                         Sedang membaca...
                                     </small>
@@ -432,12 +427,12 @@ $nextLesson = $stmtNext->fetch();
 <script>
     (function() {
         var list = document.getElementById('lesson-points');
-        var btnNext = document.getElementById('btn-next-point');
+        var timerIcon = document.getElementById('timer-icon');
         var hint = document.getElementById('lesson-hint');
         var btnGoQuiz = document.getElementById('btn-go-quiz');
 
         // Jika tidak ada list poin materi, tidak perlu lakukan apa-apa
-        if (!list || !btnNext) {
+        if (!list) {
             // No points to read -> immediately mark as read and enable quiz button (if present)
             if (btnGoQuiz) {
                 markLessonRead();
@@ -459,14 +454,15 @@ $nextLesson = $stmtNext->fetch();
             }
         }
 
-        function startTimer(seconds) {
+        function startTimer(seconds, callback) {
             var ms = seconds * 1000;
             var start = Date.now();
             
-            // Set Loading State
-            btnNext.disabled = true;
-            btnNext.innerHTML = '<span class="hourglass-spin">⏳</span>';
-            updateHint('Silakan baca materi ini...');
+            // Show Loading State
+            if (timerIcon) {
+                timerIcon.style.display = 'inline-block';
+            }
+            updateHint('Sedang membaca poin ini...');
 
             if (timerInterval) clearInterval(timerInterval);
 
@@ -474,72 +470,62 @@ $nextLesson = $stmtNext->fetch();
                 var elapsed = Date.now() - start;
                 if (elapsed >= ms) {
                     clearInterval(timerInterval);
-                    // Set Ready State
-                    btnNext.disabled = false;
-                    btnNext.innerHTML = 'Lanjut';
-                    updateHint('Silakan klik <strong>Lanjut</strong>.');
+                    // Hide timer icon ketika selesai
+                    if (timerIcon) {
+                        timerIcon.style.display = 'none';
+                    }
+                    // Call callback (untuk menampilkan poin berikutnya atau selesai)
+                    if (callback) {
+                        callback();
+                    }
                 }
             }, 100);
+        }
+
+        function showNextPoint() {
+            var lastIndex = points.length - 1;
+
+            if (currentIndex < lastIndex) {
+                // Masih ada poin lagi
+                currentIndex++;
+                points[currentIndex].style.display = 'list-item';
+                
+                // Start timer untuk poin berikutnya
+                var nextPoint = points[currentIndex];
+                var nextSec = parseInt(nextPoint.getAttribute('data-required-seconds') || '0', 10);
+                
+                if (currentIndex === lastIndex) {
+                    // Ini poin terakhir
+                    startTimer(nextSec, function() {
+                        updateHint('Semua poin materi sudah ditampilkan. Silakan klik "Kerjakan Soal" untuk melanjutkan.');
+                        // Mark lesson read and enable button
+                        if (btnGoQuiz) {
+                            markLessonRead();
+                        }
+                    });
+                } else {
+                    // Masih ada poin lagi setelah ini
+                    startTimer(nextSec, showNextPoint);
+                }
+            }
         }
 
         // Start timer for the first point immediately
         var firstPoint = points[0];
         var firstSec = parseInt(firstPoint.getAttribute('data-required-seconds') || '0', 10);
-        startTimer(firstSec);
-
-        btnNext.addEventListener('click', function() {
-            var lastIndex = points.length - 1;
-
-            if (currentIndex < lastIndex - 1) {
-                // Masih ada minimal 2 poin lagi
-                currentIndex++;
-                points[currentIndex].style.display = 'list-item';
-                
-                // Start timer for next point
-                var nextPoint = points[currentIndex];
-                var nextSec = parseInt(nextPoint.getAttribute('data-required-seconds') || '0', 10);
-                startTimer(nextSec);
-
-            } else if (currentIndex === lastIndex - 1) {
-                // Klik ini akan menampilkan poin terakhir
-                currentIndex++;
-                points[currentIndex].style.display = 'list-item';
-                
-                // Start timer for the last point
-                var lastPoint = points[currentIndex];
-                var lastSec = parseInt(lastPoint.getAttribute('data-required-seconds') || '0', 10);
-                
-                // Special handling for last point:
-                // We still run the timer, but when it finishes, we disable the button permanently
-                btnNext.disabled = true;
-                btnNext.innerHTML = '<span class="hourglass-spin">⏳</span>';
-                updateHint('Silakan baca poin terakhir ini...');
-
-                if (timerInterval) clearInterval(timerInterval);
-                var start = Date.now();
-                var ms = lastSec * 1000;
-
-                timerInterval = setInterval(function() {
-                    var elapsed = Date.now() - start;
-                    if (elapsed >= ms) {
-                        clearInterval(timerInterval);
-                        // Finished reading everything
-                        btnNext.disabled = true;
-                        btnNext.innerHTML = 'Selesai';
-                        updateHint('Semua poin materi sudah ditampilkan. Silakan klik "Kerjakan Soal" untuk melanjutkan.');
-                        
-                        // Mark lesson read and enable button
-                        if (btnGoQuiz) {
-                            markLessonRead();
-                        }
-                    }
-                }, 100);
-
-            } else {
-                // Should not happen if logic is correct
-                btnNext.disabled = true;
-            }
-        });
+        
+        if (points.length === 1) {
+            // Hanya ada 1 poin
+            startTimer(firstSec, function() {
+                updateHint('Semua poin materi sudah ditampilkan. Silakan klik "Kerjakan Soal" untuk melanjutkan.');
+                if (btnGoQuiz) {
+                    markLessonRead();
+                }
+            });
+        } else {
+            // Ada lebih dari 1 poin
+            startTimer(firstSec, showNextPoint);
+        }
     })();
 
     // MARK LESSON AS READ FUNCTION
