@@ -1,5 +1,16 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    // Konfigurasi penyimpanan sesi kustom agar tidak mudah logout
+    $sessionPath = __DIR__ . '/sessions';
+    if (!file_exists($sessionPath)) {
+        mkdir($sessionPath, 0777, true);
+    }
+    session_save_path($sessionPath);
+    
+    // Perpanjang durasi sesi (opsional, misal 30 hari)
+    ini_set('session.gc_maxlifetime', 2592000); // 30 hari
+    ini_set('session.cookie_lifetime', 2592000);
+    
     session_start();
 }
 
