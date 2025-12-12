@@ -83,8 +83,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Scroll to top
                 window.scrollTo(0, 0);
+
+                // Hide loader manually for AJAX navigation
+                const loader = document.getElementById('page-loader');
+                if (loader) loader.classList.add('hidden');
             })
-            .catch(err => console.error('Error loading page:', err));
+            .catch(err => {
+                console.error('Error loading page:', err);
+                // Hide loader on error
+                const loader = document.getElementById('page-loader');
+                if (loader) loader.classList.add('hidden');
+            });
     }
 
     navItems.forEach(item => {
