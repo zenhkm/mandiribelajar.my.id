@@ -15,7 +15,7 @@ if (!$course) {
 
 // Hapus Materi
 if (isset($_GET['delete_lesson'])) {
-    $lid = (int)$$_GET['delete_lesson'];
+    $lid = (int)$_GET['delete_lesson'];
     $pdo->prepare("DELETE FROM lessons WHERE id = ?")->execute([$lid]);
     header("Location: index.php?page=admin_lessons&course_id=$courseId&msg=deleted");
     exit;
