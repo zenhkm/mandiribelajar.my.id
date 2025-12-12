@@ -260,8 +260,12 @@ $nextLesson = $stmtNext->fetch();
                             || $lesson['content_type'] === 'mixed'
                         ): ?>
                             <?php
+                            // Normalisasi line breaks: ubah \n menjadi newline sebenarnya
+                            $content = str_replace('\\n', "\n", $lesson['content_text']);
+                            $content = str_replace('\r\n', "\r\n", $content);
+                            
                             // Pecah materi per baris sebagai poin
-                            $rawLines = preg_split('/\r\n|\r|\n/', trim($lesson['content_text']));
+                            $rawLines = preg_split('/\r\n|\r|\n/', trim($content));
                             $points = array();
                             if (is_array($rawLines)) {
                                 foreach ($rawLines as $line) {
