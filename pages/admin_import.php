@@ -4,6 +4,9 @@ check_admin();
 
 // --- AJAX HANDLER FOR DROPDOWNS ---
 if (isset($_GET['ajax_action'])) {
+    // Bersihkan buffer agar tidak ada HTML header yang ikut
+    if (ob_get_length()) ob_clean();
+
     header('Content-Type: application/json');
     $action = $_GET['ajax_action'];
     
@@ -310,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (courseId) {
-                fetch(`index.php?page=admin_import&ajax_action=get_modules&course_id=${courseId}`)
+                fetch(`index.php?page=admin_import&ajax_action=get_modules&course_id=${courseId}&ajax=1`)
                     .then(response => response.json())
                     .then(data => {
                         targetSelect.innerHTML = '<option value="">-- Pilih Bab --</option>';
@@ -340,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
             targetSelect.disabled = true;
 
             if (moduleId) {
-                fetch(`index.php?page=admin_import&ajax_action=get_lessons&module_id=${moduleId}`)
+                fetch(`index.php?page=admin_import&ajax_action=get_lessons&module_id=${moduleId}&ajax=1`)
                     .then(response => response.json())
                     .then(data => {
                         targetSelect.innerHTML = '<option value="">-- Pilih Materi --</option>';
