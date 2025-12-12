@@ -65,10 +65,10 @@ if (!isset($pageTitle)) {
 
         // Apply theme immediately to prevent flash
         (function() {
-            const savedTheme = localStorage.getItem('appTheme') || 'auto';
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            // Default to light if not set. Ignore system preference.
+            const savedTheme = localStorage.getItem('appTheme') || 'light';
             
-            if (savedTheme === 'dark' || (savedTheme === 'auto' && prefersDark)) {
+            if (savedTheme === 'dark') {
                 document.documentElement.setAttribute('data-bs-theme', 'dark');
                 document.documentElement.classList.add('dark-mode');
             } else {
@@ -79,8 +79,7 @@ if (!isset($pageTitle)) {
 
         // Function to be called from settings page
         function applyTheme(theme) {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (theme === 'dark' || (theme === 'auto' && prefersDark)) {
+            if (theme === 'dark') {
                 document.documentElement.setAttribute('data-bs-theme', 'dark');
                 document.documentElement.classList.add('dark-mode');
             } else {
