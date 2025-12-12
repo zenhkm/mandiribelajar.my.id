@@ -163,12 +163,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_type'])) {
             
             if ($importType === 'lessons') {
                 $moduleId = (int)$_POST['module_id'];
+                
+                // Ambil course_id dari module_id
+                $stmtCourse = $pdo->prepare("SELECT course_id FROM course_modules WHERE id = ?");
+                $stmtCourse->execute([$moduleId]);
+                $courseId = $stmtCourse->fetchColumn();
+                
                 // Ambil urutan terakhir
                 $stmtOrder = $pdo->prepare("SELECT MAX(lesson_order) FROM lessons WHERE module_id = ?");
                 $stmtOrder->execute([$moduleId]);
                 $lastOrder = $stmtOrder->fetchColumn() ?: 0;
                 
-                $stmt = $pdo->prepare("INSERT INTO lessons (module_id, title, content_type, content, video_url, lesson_order) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt = $pdo->prepare("INSERT INTO lessons (course_id, module_id, lesson_order, title, content_type, content_text, video_url) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 
                 foreach ($rows as $row) {
                     // Pastikan baris tidak kosong
@@ -176,12 +182,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['import_type'])) {
                     
                     $title = $row[0] ?? '';
                     $contentType = strtolower($row[1] ?? 'text');
-                    $content = $row[2] ?? '';
+                    $contentText = $row[2] ?? '';
                     $videoUrl = $row[3] ?? '';
                     
                     if ($title) {
                         $lastOrder++;
-                        $stmt->execute([$moduleId, $title, $contentType, $content, $videoUrl, $lastOrder]);
+                        $stmt->execute([$courseId, $moduleId, $lastOrder, $title, $contentType, $contentText, $videoUrl]);
                         $count++;
                     }
                 }
