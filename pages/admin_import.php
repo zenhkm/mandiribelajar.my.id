@@ -44,16 +44,16 @@ if (isset($_GET['download_template'])) {
     
     if ($type === 'lessons') {
         // Header Bahasa Indonesia, Tanpa ID
-        fputcsv($output, ['Judul Materi', 'Tipe Konten (text/video)', 'Isi Materi', 'URL Video']);
-        fputcsv($output, ['Contoh Judul', 'text', 'Isi materi disini...', '']);
+        fputcsv($output, ['Judul Materi', 'Tipe Konten (text/video)', 'Isi Materi', 'URL Video'], ';');
+        fputcsv($output, ['Contoh Judul', 'text', 'Isi materi disini...', ''], ';');
     } elseif ($type === 'modules') {
         // Header Bahasa Indonesia, Tanpa ID
-        fputcsv($output, ['Judul Bab', 'Deskripsi Singkat']);
-        fputcsv($output, ['Pendahuluan', 'Pengenalan dasar materi']);
+        fputcsv($output, ['Judul Bab', 'Deskripsi Singkat'], ';');
+        fputcsv($output, ['Pendahuluan', 'Pengenalan dasar materi'], ';');
     } elseif ($type === 'questions') {
         // Header Bahasa Indonesia, Tanpa ID
-        fputcsv($output, ['Pertanyaan', 'Penjelasan', 'Pilihan A', 'Pilihan B', 'Pilihan C', 'Pilihan D', 'Pilihan E', 'Jawaban Benar (A-E)']);
-        fputcsv($output, ['Contoh Pertanyaan?', 'Penjelasan jawaban', 'Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E', 'A']);
+        fputcsv($output, ['Pertanyaan', 'Penjelasan', 'Pilihan A', 'Pilihan B', 'Pilihan C', 'Pilihan D', 'Pilihan E', 'Jawaban Benar (A-E)'], ';');
+        fputcsv($output, ['Contoh Pertanyaan?', 'Penjelasan jawaban', 'Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E', 'A'], ';');
     }
     
     fclose($output);
@@ -76,9 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['import_file'])) {
             
             try {
                 // Skip header row
-                fgetcsv($handle);
+                fgetcsv($handle, 0, ';');
                 
-                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                while (($data = fgetcsv($handle, 0, ";")) !== FALSE) {
                     $row++;
                     
                     if ($importType === 'modules') {
@@ -347,7 +347,7 @@ $courses = $stmtCourses->fetchAll();
         <h5>Panduan Import:</h5>
         <ul>
             <li>Pastikan format file adalah <strong>.csv</strong>.</li>
-            <li>Gunakan template terbaru (Header Bahasa Indonesia).</li>
+            <li>Gunakan template terbaru (Delimiter: <strong>Titik Koma / Semicolon</strong>).</li>
             <li>Pilih lokasi (Kursus/Bab/Materi) di form sebelum upload.</li>
             <li>Sistem akan otomatis mengatur urutan materi.</li>
         </ul>
