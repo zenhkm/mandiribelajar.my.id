@@ -132,7 +132,6 @@ if (isset($_GET['download_template'])) {
             $sheet->getCell("F$i")->setDataValidation(clone $validation);
         }
     }
-    }
     
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment;filename="'.$filename.'"');
