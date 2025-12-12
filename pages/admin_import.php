@@ -26,6 +26,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 
 // --- AJAX HANDLER FOR DROPDOWNS ---
 if (isset($_GET['ajax_action'])) {
@@ -80,6 +81,21 @@ if (isset($_GET['download_template'])) {
         foreach(range('A','D') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
+
+        // Data Validation untuk Tipe Konten (Kolom B)
+        $validation = $sheet->getCell('B2')->getDataValidation();
+        $validation->setType(DataValidation::TYPE_LIST);
+        $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+        $validation->setAllowBlank(false);
+        $validation->setShowInputMessage(true);
+        $validation->setShowErrorMessage(true);
+        $validation->setShowDropDown(true);
+        $validation->setFormula1('"text,video"');
+        
+        // Terapkan ke baris 2 sampai 1000
+        for ($i = 3; $i <= 1000; $i++) {
+            $sheet->getCell("B$i")->setDataValidation(clone $validation);
+        }
         
     } elseif ($type === 'modules') {
         $headers = ['Judul Modul', 'Deskripsi'];
@@ -100,6 +116,22 @@ if (isset($_GET['download_template'])) {
         foreach(range('A','G') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
+
+        // Data Validation untuk Jawaban Benar (Kolom F)
+        $validation = $sheet->getCell('F2')->getDataValidation();
+        $validation->setType(DataValidation::TYPE_LIST);
+        $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+        $validation->setAllowBlank(false);
+        $validation->setShowInputMessage(true);
+        $validation->setShowErrorMessage(true);
+        $validation->setShowDropDown(true);
+        $validation->setFormula1('"A,B,C,D"');
+
+        // Terapkan ke baris 2 sampai 1000
+        for ($i = 3; $i <= 1000; $i++) {
+            $sheet->getCell("F$i")->setDataValidation(clone $validation);
+        }
+    }
     }
     
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
