@@ -38,6 +38,10 @@ if (!isset($pageTitle)) {
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Show loader before navigating
+                    const loader = document.getElementById('page-loader');
+                    if (loader) loader.classList.remove('hidden');
+                    
                     window.location.href = url;
                 }
             });
@@ -366,6 +370,9 @@ if (!isset($pageTitle)) {
         // Show loader on link click (optional, for smoother feel between pages)
         document.addEventListener('DOMContentLoaded', function() {
             document.body.addEventListener('click', function(e) {
+                // If default prevented (e.g. by confirmAction), don't show loader yet
+                if (e.defaultPrevented) return;
+
                 const target = e.target.closest('a');
                 if (target) {
                     const href = target.getAttribute('href');
