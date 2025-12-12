@@ -32,6 +32,10 @@ $courses = $stmt->fetchAll();
                 📊 Laporan
             </a>
 
+            <a href="index.php?page=admin_import" class="btn btn-outline-success me-2">
+                📥 Import Data
+            </a>
+
             <a href="index.php?page=admin_users" class="btn btn-outline-dark me-2">
                 👥 Peserta
             </a>

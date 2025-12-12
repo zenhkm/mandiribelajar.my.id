@@ -29,6 +29,10 @@ if ($page === 'admin') {
     $pageTitle = 'Form Materi';
     $contentFile = __DIR__ . '/pages/admin_lesson_form.php';
 
+} elseif ($page === 'admin_import') {
+    $pageTitle = 'Import Data';
+    $contentFile = __DIR__ . '/pages/admin_import.php';
+
 } elseif ($page === 'profile') {
     $pageTitle = 'Profil Saya';
     $contentFile = __DIR__ . '/pages/profile.php';
