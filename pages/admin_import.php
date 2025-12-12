@@ -136,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['import_file'])) {
                 <div class="card-body">
                     <p>Gunakan fitur ini untuk mengupload banyak materi sekaligus.</p>
                     <div class="mb-3">
-                        <a href="index.php?page=admin_import&download_template=lessons" class="btn btn-outline-primary btn-sm">
+                        <a href="index.php?page=admin_import&download_template=lessons" class="btn btn-outline-primary btn-sm" target="_blank">
                             <i class="bi bi-download"></i> Download Template CSV
                         </a>
                     </div>
@@ -160,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['import_file'])) {
                 <div class="card-body">
                     <p>Gunakan fitur ini untuk mengupload banyak soal sekaligus beserta pilihannya.</p>
                     <div class="mb-3">
-                        <a href="index.php?page=admin_import&download_template=questions" class="btn btn-outline-success btn-sm">
+                        <a href="index.php?page=admin_import&download_template=questions" class="btn btn-outline-success btn-sm" target="_blank">
                             <i class="bi bi-download"></i> Download Template CSV
                         </a>
                     </div>
