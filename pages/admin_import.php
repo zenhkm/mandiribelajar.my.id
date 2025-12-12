@@ -46,6 +46,10 @@ if (isset($_GET['download_template'])) {
         // Header Bahasa Indonesia, Tanpa ID
         fputcsv($output, ['Judul Materi', 'Tipe Konten (text/video)', 'Isi Materi', 'URL Video']);
         fputcsv($output, ['Contoh Judul', 'text', 'Isi materi disini...', '']);
+    } elseif ($type === 'modules') {
+        // Header Bahasa Indonesia, Tanpa ID
+        fputcsv($output, ['Judul Bab', 'Deskripsi Singkat']);
+        fputcsv($output, ['Pendahuluan', 'Pengenalan dasar materi']);
     } elseif ($type === 'questions') {
         // Header Bahasa Indonesia, Tanpa ID
         fputcsv($output, ['Pertanyaan', 'Penjelasan', 'Pilihan A', 'Pilihan B', 'Pilihan C', 'Pilihan D', 'Pilihan E', 'Jawaban Benar (A-E)']);
@@ -77,7 +81,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['import_file'])) {
                 while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                     $row++;
                     
-                    if ($importType === 'lessons') {
+                    if ($importType === 'modules') {
+                        // Input dari Form
+                        $courseId = (int)$_POST['course_id'];
+                        
+                        // Auto Calculate Order
+                        $stmtOrder = $pdo->prepare("SELECT MAX(module_order) FROM course_modules WHERE course_id = ?");
+                        $stmtOrder->execute([$courseId]);
+                        $maxOrder = $stmtOrder->fetchColumn();
+                        $nextOrder = ($maxOrder ? $maxOrder : 0) + 1;
+
+                        // CSV Columns: 0=Judul, 1=Deskripsi
+                        if (count($data) < 1) continue;
+                        
+                        $title = $data[0];
+                        $summary = $data[1] ?? '';
+
+                        $stmt = $pdo->prepare("INSERT INTO course_modules (course_id, module_order, title, summary) VALUES (?, ?, ?, ?)");
+                        $stmt->execute([
+                            $courseId,
+                            $nextOrder,
+                            $title,
+                            $summary
+                        ]);
+                        $successCount++;
+
+                    } elseif ($importType === 'lessons') {
                         // Input dari Form
                         $courseId = (int)$_POST['course_id'];
                         $moduleId = (int)$_POST['module_id'];
@@ -159,8 +188,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['import_file'])) {
             
             fclose($handle);
         } else {
-            $error = "Gagal membuka file.";
-        }
+            $error = ODULES -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Import Bab (Modules)</h5>
+                </div>
+                <div class="card-body">
+                    <p>Upload Bab untuk Kursus tertentu.</p>
+                    <div class="mb-3">
+                        <a href="index.php?page=admin_import&download_template=modules" class="btn btn-outline-info btn-sm" target="_blank">
+                            <i class="bi bi-download"></i> Download Template CSV
+                        </a>
+                    </div>
+                    <form method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="import_type" value="modules">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Kursus</label>
+                            <select name="course_id" class="form-select" required>
+                                <option value="">-- Pilih Kursus --</option>
+                                <?php foreach ($courses as $c): ?>
+                                    <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['title']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">File CSV</label>
+                            <input type="file" name="import_file" class="form-control" accept=".csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-info text-white">Upload Bab</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- IMPORT MATERI -->
+        <div class="col-md-4
     }
 }
 
@@ -192,7 +257,7 @@ $courses = $stmtCourses->fetchAll();
                 </div>
                 <div class="card-body">
                     <p>Upload materi untuk Bab tertentu.</p>
-                    <div class="mb-3">
+                    <div cl4ss="mb-3">
                         <a href="index.php?page=admin_import&download_template=lessons" class="btn btn-outline-primary btn-sm" target="_blank">
                             <i class="bi bi-download"></i> Download Template CSV
                         </a>
