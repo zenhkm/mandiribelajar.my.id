@@ -7,6 +7,9 @@ $error = '';
 
 // Handle Template Download
 if (isset($_GET['download_template'])) {
+    // Bersihkan output buffer agar tidak ada HTML header yang ikut terdownload
+    if (ob_get_length()) ob_clean();
+    
     $type = $_GET['download_template'];
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="template_' . $type . '.csv"');
