@@ -269,14 +269,15 @@ $nextLesson = $stmtNext->fetch();
                             $points = array();
                             if (is_array($rawLines)) {
                                 foreach ($rawLines as $line) {
-                                    $line = trim($line);
-                                    if ($line === '') continue;
+                                    // Jangan trim berlebihan agar spasi di awal tetap ada (persisi)
+                                    // Tapi kita tetap skip baris yang benar-benar kosong
+                                    if (trim($line) === '') continue;
                                     $points[] = $line;
                                 }
                             }
                             ?>
                             <?php if (!empty($points)): ?>
-                                <ul id="lesson-points" class="small lesson-points-list">
+                                <div id="lesson-points" class="small lesson-points-container">
                                     <?php foreach ($points as $i => $p): ?>
                                         <?php
                                         // Hitung jumlah kata
@@ -286,25 +287,14 @@ $nextLesson = $stmtNext->fetch();
                                         // PERCEPAT TIMER: 0.15 detik per kata (2x lebih cepat), min 2 detik
                                         $requiredSeconds = max(2, ceil($wordCount * 0.15));
                                         ?>
-                                        <li class="lesson-point"
+                                        <div class="lesson-point"
                                             data-required-seconds="<?= $requiredSeconds ?>"
                                             data-index="<?= $i ?>"
-                                            <?= $i > 0 ? 'style="display:none;"' : '' ?>>
-                                            <?= nl2br(htmlspecialchars($p)) ?>
-                                        </li>
+                                            style="white-space: pre-wrap; line-height: 1.6; margin-bottom: 0.75rem; <?= $i > 0 ? 'display:none;' : '' ?>">
+                                            <?= htmlspecialchars($p) ?>
+                                        </div>
                                     <?php endforeach; ?>
-                                </ul>
-
-                                <style>
-                                    #lesson-points {
-                                        list-style: disc;
-                                        padding-left: 2rem;
-                                    }
-                                    #lesson-points .lesson-point {
-                                        margin-bottom: 0.75rem;
-                                        line-height: 1.6;
-                                    }
-                                </style>
+                                </div>
 
                                 <div class="d-flex align-items-center gap-2 mt-2">
                                     <style>
@@ -499,7 +489,7 @@ $nextLesson = $stmtNext->fetch();
             if (currentIndex < lastIndex) {
                 // Masih ada poin lagi
                 currentIndex++;
-                points[currentIndex].style.display = 'list-item';
+                points[currentIndex].style.display = 'block';
                 
                 // Start timer untuk poin berikutnya
                 var nextPoint = points[currentIndex];
