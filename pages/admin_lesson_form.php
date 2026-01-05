@@ -123,21 +123,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
-<!-- TinyMCE Rich Text Editor -->
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<!-- CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
 <script>
-    tinymce.init({
-        selector: '#content_text',
-        plugins: 'advlist autolink lists link image charmap preview anchor searchreplace verticalblocks code fullscreen insertdatetime media table code help wordcount',
-        toolbar: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-        menubar: false,
-        height: 400,
-        branding: false,
-        promotion: false,
-        setup: function (editor) {
-            editor.on('change', function () {
-                editor.save();
+    ClassicEditor
+        .create(document.querySelector('#content_text'), {
+            toolbar: [
+                'heading', '|',
+                'bold', 'italic', 'underline', 'strikethrough', '|',
+                'bulletedList', 'numberedList', 'outdent', 'indent', '|',
+                'link', 'insertTable', 'blockQuote', '|',
+                'undo', 'redo'
+            ]
+        })
+        .then(editor => {
+            // Ensure data is synced to textarea before form submit
+            editor.model.document.on('change:data', () => {
+                document.querySelector('#content_text').value = editor.getData();
             });
-        }
-    });
+        })
+        .catch(error => {
+            console.error(error);
+        });
 </script>
+<style>
+    /* Adjust CKEditor height */
+    .ck-editor__editable {
+        min-height: 300px;
+    }
+</style>
