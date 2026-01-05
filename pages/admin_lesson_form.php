@@ -110,8 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="mb-3">
                     <label class="form-label">Isi Materi (Teks)</label>
-                    <textarea name="content_text" class="form-control" rows="10" placeholder="Tulis materi di sini..."><?= htmlspecialchars($lesson['content_text'] ?? '') ?></textarea>
-                    <div class="form-text">Tips: Pisahkan antar paragraf dengan Enter (Baris baru) agar sistem bisa memecahnya menjadi poin-poin bacaan.</div>
+                    <textarea name="content_text" id="content_text" class="form-control" rows="15" placeholder="Tulis materi di sini..."><?= htmlspecialchars($lesson['content_text'] ?? '') ?></textarea>
+                    <div class="form-text">Tips: Gunakan editor di atas untuk mengatur format teks (Bold, Italic, List, dll). Setiap paragraf atau poin akan muncul bertahap di halaman siswa.</div>
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
@@ -122,3 +122,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
+
+<!-- TinyMCE Rich Text Editor -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    tinymce.init({
+        selector: '#content_text',
+        plugins: 'advlist autolink lists link image charmap preview anchor searchreplace verticalblocks code fullscreen insertdatetime media table code help wordcount',
+        toolbar: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+        menubar: false,
+        height: 400,
+        branding: false,
+        promotion: false,
+        setup: function (editor) {
+            editor.on('change', function () {
+                editor.save();
+            });
+        }
+    });
+</script>

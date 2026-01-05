@@ -260,38 +260,59 @@ $nextLesson = $stmtNext->fetch();
                             || $lesson['content_type'] === 'mixed'
                         ): ?>
                             <?php
-                            // Normalisasi line breaks: ubah \n menjadi newline sebenarnya
-                            $content = str_replace('\\n', "\n", $lesson['content_text']);
-                            $content = str_replace('\r\n', "\r\n", $content);
+                            $content = $lesson['content_text'];
                             
-                            // Pecah materi per baris sebagai poin
-                            $rawLines = preg_split('/\r\n|\r|\n/', trim($content));
-                            $points = array();
-                            if (is_array($rawLines)) {
-                                foreach ($rawLines as $line) {
-                                    // Jangan trim berlebihan agar spasi di awal tetap ada (persisi)
-                                    // Tapi kita tetap skip baris yang benar-benar kosong
-                                    if (trim($line) === '') continue;
-                                    $points[] = $line;
+                            // Fungsi untuk memecah HTML menjadi poin-poin materi
+                            function getLessonPoints($html) {
+                                if (empty(trim($html))) return [];
+                                
+                                // Jika tidak ada tag HTML, anggap teks biasa dan pecah per baris
+                                if ($html === strip_tags($html)) {
+                                    $lines = preg_split('/\r\n|\r|\n/', trim($html));
+                                    return array_filter(array_map('trim', $lines));
                                 }
+
+                                $doc = new DOMDocument();
+                                // Handle UTF-8 and suppress errors for invalid HTML
+                                @$doc->loadHTML('<?xml encoding="utf-8" ?>' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                                
+                                $points = [];
+                                foreach ($doc->childNodes as $node) {
+                                    if ($node->nodeName === 'ul' || $node->nodeName === 'ol') {
+                                        foreach ($node->childNodes as $li) {
+                                            if ($li->nodeName === 'li') {
+                                                // Bungkus li dalam tag induknya agar gaya list tetap terjaga
+                                                $points[] = "<{$node->nodeName} style='margin-bottom:0;'>" . $doc->saveHTML($li) . "</{$node->nodeName}>";
+                                            }
+                                        }
+                                    } else {
+                                        $htmlNode = $doc->saveHTML($node);
+                                        if (trim($htmlNode) !== '') {
+                                            $points[] = $htmlNode;
+                                        }
+                                    }
+                                }
+                                return $points;
                             }
+
+                            $points = getLessonPoints($content);
                             ?>
                             <?php if (!empty($points)): ?>
                                 <div id="lesson-points" class="small lesson-points-container">
                                     <?php foreach ($points as $i => $p): ?>
                                         <?php
-                                        // Hitung jumlah kata
+                                        // Hitung jumlah kata untuk timer
                                         $plain = strip_tags($p);
                                         $wordCount = str_word_count($plain);
                                         if ($wordCount <= 0) $wordCount = 1;
-                                        // PERCEPAT TIMER: 0.15 detik per kata (2x lebih cepat), min 2 detik
+                                        // 0.15 detik per kata, min 2 detik
                                         $requiredSeconds = max(2, ceil($wordCount * 0.15));
                                         ?>
                                         <div class="lesson-point"
                                             data-required-seconds="<?= $requiredSeconds ?>"
                                             data-index="<?= $i ?>"
-                                            style="white-space: pre-wrap; line-height: 1.6; margin-bottom: 0.75rem; <?= $i > 0 ? 'display:none;' : '' ?>">
-                                            <?= htmlspecialchars($p) ?>
+                                            style="line-height: 1.6; margin-bottom: 0.75rem; <?= $i > 0 ? 'display:none;' : '' ?>">
+                                            <?= $p // Render HTML langsung ?>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
@@ -314,8 +335,8 @@ $nextLesson = $stmtNext->fetch();
                                     </small>
                                 </div>
                             <?php else: ?>
-                                <div class="small" style="white-space: pre-wrap;">
-                                    <?= nl2br(htmlspecialchars($lesson['content_text'])) ?>
+                                <div class="small">
+                                    <?= $lesson['content_text'] ?>
                                 </div>
                             <?php endif; ?>
                         <?php endif; ?>
