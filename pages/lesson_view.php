@@ -311,29 +311,31 @@ $nextLesson = $stmtNext->fetch();
                                         <div class="lesson-point"
                                             data-required-seconds="<?= $requiredSeconds ?>"
                                             data-index="<?= $i ?>"
-                                            style="line-height: 1.6; margin-bottom: 0.75rem; <?= $i > 0 ? 'display:none;' : '' ?>">
+                                            style="line-height: 1.6; margin-bottom: 0.75rem; <?= ($i > 0 && !$hasPassedLesson) ? 'display:none;' : '' ?>">
                                             <?= $p // Render HTML langsung ?>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
 
-                                <div class="d-flex align-items-center gap-2 mt-2">
-                                    <style>
-                                        @keyframes spin-hourglass {
-                                            0% { transform: rotate(0deg); }
-                                            100% { transform: rotate(180deg); }
-                                        }
-                                        .hourglass-spin {
-                                            display: inline-block;
-                                            animation: spin-hourglass 2s infinite linear;
-                                            font-size: 1.2rem;
-                                        }
-                                    </style>
-                                    <span id="timer-icon" class="hourglass-spin">⏳</span>
-                                    <small class="text-muted" id="lesson-hint">
-                                        Sedang membaca...
-                                    </small>
-                                </div>
+                                <?php if (!$hasPassedLesson): ?>
+                                    <div class="d-flex align-items-center gap-2 mt-2">
+                                        <style>
+                                            @keyframes spin-hourglass {
+                                                0% { transform: rotate(0deg); }
+                                                100% { transform: rotate(180deg); }
+                                            }
+                                            .hourglass-spin {
+                                                display: inline-block;
+                                                animation: spin-hourglass 2s infinite linear;
+                                                font-size: 1.2rem;
+                                            }
+                                        </style>
+                                        <span id="timer-icon" class="hourglass-spin">⏳</span>
+                                        <small class="text-muted" id="lesson-hint">
+                                            Sedang membaca...
+                                        </small>
+                                    </div>
+                                <?php endif; ?>
                             <?php else: ?>
                                 <div class="small">
                                     <?= $lesson['content_text'] ?>
@@ -452,6 +454,15 @@ $nextLesson = $stmtNext->fetch();
         var timerIcon = document.getElementById('timer-icon');
         var hint = document.getElementById('lesson-hint');
         var btnGoQuiz = document.getElementById('btn-go-quiz');
+        var hasPassed = <?= $hasPassedLesson ? 'true' : 'false' ?>;
+
+        // Jika sudah lulus, tidak perlu timer
+        if (hasPassed) {
+            if (btnGoQuiz) {
+                markLessonRead();
+            }
+            return;
+        }
 
         // Jika tidak ada list poin materi, tidak perlu lakukan apa-apa
         if (!list) {
