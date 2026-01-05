@@ -311,13 +311,13 @@ $nextLesson = $stmtNext->fetch();
                                         <div class="lesson-point"
                                             data-required-seconds="<?= $requiredSeconds ?>"
                                             data-index="<?= $i ?>"
-                                            style="line-height: 1.6; margin-bottom: 0.75rem; <?= ($i > 0 && !$hasPassedLesson) ? 'display:none;' : '' ?>">
+                                            style="line-height: 1.6; margin-bottom: 0.75rem; <?= ($i > 0 && !$hasPassedLesson && !$hasRead) ? 'display:none;' : '' ?>">
                                             <?= $p // Render HTML langsung ?>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
 
-                                <?php if (!$hasPassedLesson): ?>
+                                <?php if (!$hasPassedLesson && !$hasRead): ?>
                                     <div class="d-flex align-items-center gap-2 mt-2">
                                         <style>
                                             @keyframes spin-hourglass {
@@ -455,9 +455,10 @@ $nextLesson = $stmtNext->fetch();
         var hint = document.getElementById('lesson-hint');
         var btnGoQuiz = document.getElementById('btn-go-quiz');
         var hasPassed = <?= $hasPassedLesson ? 'true' : 'false' ?>;
+        var hasRead = <?= $hasRead ? 'true' : 'false' ?>;
 
-        // Jika sudah lulus, tidak perlu timer
-        if (hasPassed) {
+        // Jika sudah lulus atau sudah pernah baca sampai selesai, tidak perlu timer
+        if (hasPassed || hasRead) {
             if (btnGoQuiz) {
                 markLessonRead();
             }
